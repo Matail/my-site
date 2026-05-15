@@ -1,0 +1,22 @@
+---
+import '../styles/global.css';
+---
+
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+
+		<!-- Pretendard 폰트 -->
+		<link rel="stylesheet" as="style" crossorigin
+			href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+
+		<title>my-site — 작은 게임 스튜디오</title>
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>

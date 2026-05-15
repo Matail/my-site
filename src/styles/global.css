@@ -1,0 +1,74 @@
+/* 컬러 — 시안 C (딥퍼플 + 라임) */
+:root {
+	--bg: #1a0b2e;             /* 메인 배경: 깊은 다크 퍼플 */
+	--surface: #2d1b4e;        /* 카드/박스 배경 */
+	--surface-light: #3d2860;  /* 호버 시 */
+	--accent: #6D28D9;         /* 진한 보라 (히어로 블록) */
+	--lime: #C4F454;           /* 라임 (메인 액센트, 버튼) */
+	--pink: #F472B6;           /* 보조 액센트 (핑크) */
+	--cyan: #38BDF8;           /* 보조 액센트 (시안) */
+	--text: #ffffff;           /* 본문 글자 */
+	--text-muted: #a39bb8;     /* 흐린 글자 */
+	--border: #3d2860;
+}
+
+/* 기본 리셋 */
+*, *::before, *::after {
+	box-sizing: border-box;
+}
+
+html {
+	font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+		system-ui, sans-serif;
+	color: var(--text);
+	background: var(--bg);
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	line-height: 1.6;
+	min-height: 100vh;
+}
+
+a {
+	color: var(--lime);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+h1, h2, h3 {
+	margin: 0 0 0.5em;
+	font-weight: 900;
+	letter-spacing: -0.03em;
+	line-height: 1;
+}
+
+/* 등장 애니메이션 — 통통 튀는 느낌 */
+@keyframes pop-in {
+	0% {
+		opacity: 0;
+		transform: translateY(20px) scale(0.8);
+	}
+	60% {
+		transform: translateY(-4px) scale(1.05);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}

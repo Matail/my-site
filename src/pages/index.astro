@@ -1,0 +1,337 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+	<!-- 헤더 -->
+	<header class="site-header">
+		<a href="/" class="logo">
+			<span class="logo-mark"></span>
+			<span>my-site</span>
+		</a>
+		<nav>
+			<a href="/games">게임</a>
+			<a href="/blog">블로그</a>
+			<a href="/about">소개</a>
+			<a href="/games" class="cta-pill">PLAY →</a>
+		</nav>
+	</header>
+
+	<main>
+		<!-- 히어로 블록: 보라 배경 -->
+		<section class="hero">
+			<p class="kicker">★ INDIE GAME STUDIO</p>
+			<h1>
+				play. build.<br>
+				<span class="hero-accent">repeat.</span>
+			</h1>
+			<p class="lead">한 명이 만드는 작은 게임 스튜디오. 브라우저에서 바로 즐길 수 있는 게임을 만들고, 만든 과정을 기록해요.</p>
+
+			<!-- 컬러풀 아이콘 -->
+			<div class="icons">
+				<div class="icon icon-lime">
+					<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+						<polygon points="6 4 20 12 6 20 6 4"/>
+					</svg>
+				</div>
+				<div class="icon icon-pink">
+					<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+						<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+					</svg>
+				</div>
+				<div class="icon icon-cyan">
+					<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+						<polyline points="20 6 9 17 4 12"/>
+					</svg>
+				</div>
+				<div class="icon icon-lime">
+					<svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+						<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+					</svg>
+				</div>
+			</div>
+		</section>
+
+		<!-- 게임 섹션 -->
+		<section class="games-section">
+			<div class="section-head">
+				<h2>게임</h2>
+				<a href="/games" class="see-all">전체 보기 →</a>
+			</div>
+
+			<div class="game-grid">
+				<a href="#" class="game-card">
+					<div class="game-thumb thumb-lime">🎯</div>
+					<h3>첫 번째 게임</h3>
+					<p>게임 설명이 여기 들어가요</p>
+				</a>
+				<a href="#" class="game-card">
+					<div class="game-thumb thumb-pink">🧩</div>
+					<h3>두 번째 게임</h3>
+					<p>아직 준비 중이에요</p>
+				</a>
+				<a href="#" class="game-card">
+					<div class="game-thumb thumb-cyan">⚡</div>
+					<h3>세 번째 게임</h3>
+					<p>곧 공개합니다</p>
+				</a>
+			</div>
+		</section>
+	</main>
+
+	<footer class="site-footer">
+		<p>© 2026 my-site · <a href="mailto:hello@example.com">contact</a></p>
+	</footer>
+</Layout>
+
+<style>
+	/* ===== 레이아웃 ===== */
+	main {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 1rem 2rem 4rem;
+	}
+
+	/* ===== 헤더 ===== */
+	.site-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1.25rem 2rem;
+		max-width: 1100px;
+		margin: 0 auto;
+	}
+
+	.logo {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-weight: 800;
+		font-size: 1.1rem;
+		color: var(--text);
+	}
+
+	.logo:hover { text-decoration: none; }
+
+	.logo-mark {
+		display: inline-block;
+		width: 24px;
+		height: 24px;
+		background: var(--lime);
+		border-radius: 6px;
+	}
+
+	.site-header nav {
+		display: flex;
+		gap: 1.5rem;
+		align-items: center;
+	}
+
+	.site-header nav a {
+		color: var(--text-muted);
+		font-weight: 500;
+		font-size: 0.95rem;
+	}
+
+	.site-header nav a:hover {
+		color: var(--text);
+		text-decoration: none;
+	}
+
+	.cta-pill {
+		background: var(--lime);
+		color: var(--bg) !important;
+		padding: 8px 18px;
+		border-radius: 999px;
+		font-weight: 700 !important;
+		font-size: 0.85rem !important;
+		transition: transform 0.15s;
+	}
+
+	.cta-pill:hover {
+		transform: translateY(-2px);
+		text-decoration: none;
+	}
+
+	/* ===== 히어로 ===== */
+	.hero {
+		background: var(--accent);
+		border-radius: 24px;
+		padding: 4rem 3rem;
+		margin-bottom: 2rem;
+		animation: fade-up 0.6s ease-out;
+	}
+
+	.kicker {
+		color: var(--lime);
+		font-size: 0.85rem;
+		font-weight: 700;
+		letter-spacing: 0.15em;
+		margin: 0 0 1rem;
+	}
+
+	.hero h1 {
+		font-size: 5rem;
+		font-weight: 900;
+		line-height: 0.95;
+		letter-spacing: -0.04em;
+		margin: 0 0 1.5rem;
+	}
+
+	.hero-accent {
+		color: var(--lime);
+	}
+
+	.lead {
+		font-size: 1.1rem;
+		color: rgba(255, 255, 255, 0.85);
+		max-width: 540px;
+		margin: 0 0 2.5rem;
+	}
+
+	/* 아이콘 행 */
+	.icons {
+		display: flex;
+		gap: 1rem;
+	}
+
+	.icon {
+		width: 72px;
+		height: 72px;
+		border-radius: 18px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--bg);
+		animation: pop-in 0.6s ease-out backwards;
+	}
+
+	.icon:nth-child(1) { animation-delay: 0.1s; }
+	.icon:nth-child(2) { animation-delay: 0.2s; border-radius: 50%; }
+	.icon:nth-child(3) { animation-delay: 0.3s; }
+	.icon:nth-child(4) { animation-delay: 0.4s; border-radius: 50%; }
+
+	.icon-lime { background: var(--lime); }
+	.icon-pink { background: var(--pink); }
+	.icon-cyan { background: var(--cyan); }
+
+	/* ===== 게임 섹션 ===== */
+	.section-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		margin-bottom: 1.5rem;
+		padding: 0 0.5rem;
+	}
+
+	.section-head h2 {
+		font-size: 1.75rem;
+		margin: 0;
+	}
+
+	.see-all {
+		color: var(--text-muted);
+		font-size: 0.9rem;
+	}
+
+	.game-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 1rem;
+	}
+
+	.game-card {
+		display: block;
+		padding: 1.25rem;
+		background: var(--surface);
+		border-radius: 16px;
+		color: var(--text);
+		transition: transform 0.15s, background 0.15s;
+	}
+
+	.game-card:hover {
+		text-decoration: none;
+		transform: translateY(-4px);
+		background: var(--surface-light);
+	}
+
+	.game-thumb {
+		width: 100%;
+		height: 100px;
+		border-radius: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 3rem;
+		margin-bottom: 1rem;
+	}
+
+	.thumb-lime { background: var(--lime); }
+	.thumb-pink { background: var(--pink); }
+	.thumb-cyan { background: var(--cyan); }
+
+	.game-card h3 {
+		font-size: 1.1rem;
+		margin: 0 0 0.25rem;
+		font-weight: 700;
+		letter-spacing: 0;
+	}
+
+	.game-card p {
+		color: var(--text-muted);
+		margin: 0;
+		font-size: 0.9rem;
+	}
+
+	/* ===== 푸터 ===== */
+	.site-footer {
+		max-width: 1100px;
+		margin: 4rem auto 0;
+		padding: 2rem;
+		border-top: 1px solid var(--border);
+		color: var(--text-muted);
+		font-size: 0.9rem;
+		text-align: center;
+	}
+
+	/* ===== 모바일 ===== */
+	@media (max-width: 640px) {
+		.site-header {
+			padding: 1rem;
+			flex-wrap: wrap;
+			gap: 1rem;
+		}
+
+		.site-header nav {
+			gap: 1rem;
+			font-size: 0.85rem;
+		}
+
+		main {
+			padding: 1rem;
+		}
+
+		.hero {
+			padding: 2.5rem 1.5rem;
+			border-radius: 16px;
+		}
+
+		.hero h1 {
+			font-size: 3rem;
+		}
+
+		.lead {
+			font-size: 1rem;
+		}
+
+		.icon {
+			width: 56px;
+			height: 56px;
+		}
+
+		.icon svg {
+			width: 26px;
+			height: 26px;
+		}
+	}
+</style>
