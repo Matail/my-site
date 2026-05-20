@@ -20,3 +20,42 @@ collections:
       - { label: "발행일", name: "pubDate", widget: "datetime" }
       - { label: "태그", name: "tags", widget: "list", required: false }
       - { label: "본문", name: "body", widget: "markdown" }
+
+  - name: "games"
+    label: "게임"
+    folder: "src/content/games"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "제목", name: "title", widget: "string" }
+      - { label: "설명 (긴 글)", name: "description", widget: "text" }
+      - { label: "짧은 설명 (카드용)", name: "shortDescription", widget: "string", required: false }
+      - { label: "게임 URL", name: "url", widget: "string", hint: "내부 게임: /games/이름/ · 외부 게임: https://..." }
+      - label: "유형"
+        name: "type"
+        widget: "select"
+        options:
+          - { label: "내부 (같은 사이트)", value: "internal" }
+          - { label: "외부 (서브도메인/외부링크)", value: "external" }
+        default: "internal"
+      - { label: "엔진", name: "engine", widget: "string", required: false, hint: "html, unity, unreal, godot 등" }
+      - label: "썸네일 색상"
+        name: "color"
+        widget: "select"
+        options:
+          - { label: "라임", value: "lime" }
+          - { label: "핑크", value: "pink" }
+          - { label: "시안", value: "cyan" }
+        default: "lime"
+      - { label: "썸네일 이모지/텍스트", name: "thumb", widget: "string", default: "🎮" }
+      - { label: "태그", name: "tags", widget: "list", required: false }
+      - { label: "출시일", name: "releaseDate", widget: "datetime" }
+      - label: "상태"
+        name: "status"
+        widget: "select"
+        options:
+          - { label: "공개 (Published)", value: "published" }
+          - { label: "작업 중 (WIP)", value: "wip" }
+          - { label: "계획 중 (Planned)", value: "planned" }
+        default: "published"
+      - { label: "본문 (상세 페이지용)", name: "body", widget: "markdown" }
