@@ -1,0 +1,98 @@
+---
+// props로 활성 페이지 받기 — 현재 페이지 메뉴를 강조 표시
+const { active } = Astro.props;
+---
+
+<header class="site-header">
+	<a href="/" class="logo">
+		<span class="logo-mark"></span>
+		<span>my-site</span>
+	</a>
+	<nav>
+		<a href="/games" class:list={[{ active: active === 'games' }]}>게임</a>
+		<a href="/blog" class:list={[{ active: active === 'blog' }]}>블로그</a>
+		<a href="/about" class:list={[{ active: active === 'about' }]}>소개</a>
+		<a href="/games" class="cta-pill">PLAY →</a>
+	</nav>
+</header>
+
+<style>
+	.site-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1.25rem 2rem;
+		max-width: 1100px;
+		margin: 0 auto;
+	}
+
+	.logo {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		font-weight: 800;
+		font-size: 1.1rem;
+		color: var(--text);
+	}
+
+	.logo:hover {
+		text-decoration: none;
+	}
+
+	.logo-mark {
+		display: inline-block;
+		width: 24px;
+		height: 24px;
+		background: var(--lime);
+		border-radius: 6px;
+	}
+
+	nav {
+		display: flex;
+		gap: 1.5rem;
+		align-items: center;
+	}
+
+	nav a {
+		color: var(--text-muted);
+		font-weight: 500;
+		font-size: 0.95rem;
+	}
+
+	nav a:hover {
+		color: var(--text);
+		text-decoration: none;
+	}
+
+	nav a.active {
+		color: var(--text);
+	}
+
+	.cta-pill {
+		background: var(--lime);
+		color: var(--bg) !important;
+		padding: 8px 18px;
+		border-radius: 999px;
+		font-weight: 700 !important;
+		font-size: 0.85rem !important;
+		transition: transform 0.15s;
+	}
+
+	.cta-pill:hover {
+		transform: translateY(-2px);
+		text-decoration: none;
+	}
+
+	@media (max-width: 640px) {
+		.site-header {
+			padding: 1rem;
+			flex-wrap: wrap;
+			gap: 1rem;
+		}
+
+		nav {
+			gap: 1rem;
+			font-size: 0.85rem;
+		}
+	}
+</style>
