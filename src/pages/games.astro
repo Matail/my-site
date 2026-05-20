@@ -1,0 +1,226 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+
+// 모든 게임 가져오기 + 출시일 역순 정렬
+const allGames = (await getCollection('games')).sort(
+	(a, b) => b.data.releaseDate.valueOf() - a.data.releaseDate.valueOf()
+);
+
+// 각 게임마다 미리 필요한 정보 다 계산해두기
+const games = allGames.map((game) => ({
+	...game,
+	isExternal: game.data.type === 'external',
+	target: game.data.type === 'external' ? '_blank' : '_self',
+	rel: game.data.type === 'external' ? 'noopener noreferrer' : undefined,
+	isWip: game.data.status === 'wip',
+	isPlanned: game.data.status === 'planned',
+}));
+---
+
+<Layout>
+	<header class="site-header">
+		<a href="/" class="logo">
+			<span class="logo-mark"></span>
+			<span>my-site</span>
+		</a>
+		<nav>
+			<a href="/games" class="active">게임</a>
+			<a href="/blog">블로그</a>
+			<a href="/about">소개</a>
+			<a href="/games" class="cta-pill">PLAY →</a>
+		</nav>
+	</header>
+
+	<main>
+		<section class="intro">
+			<p class="kicker">★ GAMES</p>
+			<h1>만든 것들,<br><span class="accent">놀러와요.</span></h1>
+			<p class="lead">브라우저에서 바로 즐길 수 있는 게임들이에요. 클릭만 하면 시작.</p>
+		</section>
+
+        <section class="game-grid">
+            {games.map((game) => (
+            <a
+                    href={game.data.url}
+                    class={`game-card status-${game.data.status}`}
+                    target={game.target}
+                    rel={game.rel}
+                >
+                    <div class={`game-thumb thumb-${game.data.color}`}>
+                        <span class="thumb-emoji">{game.data.thumb}</span>
+                        {game.isWip && <span class="badge">WIP</span>}
+                        {game.isPlanned && <span class="badge">SOON</span>}
+                    </div>
+                    <div class="game-info">
+                        <h3>{game.data.title}</h3>
+                        <p>{game.data.shortDescription || game.data.description}</p>
+                        {game.data.tags && (
+                            <div class="tags">
+                                {game.data.tags.map((tag) => <span class="tag">#{tag}</span>)}
+                            </div>
+                        )}
+                    </div>
+                </a>
+            ))}
+        </section>
+	</main>
+
+	<footer class="site-footer">
+		<p>© 2026 my-site · <a href="mailto:hello@example.com">contact</a></p>
+	</footer>
+</Layout>
+
+<style>
+	/* 헤더 */
+	.site-header {
+		display: flex; justify-content: space-between; align-items: center;
+		padding: 1.25rem 2rem; max-width: 1100px; margin: 0 auto;
+	}
+	.logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; color: var(--text); }
+	.logo:hover { text-decoration: none; }
+	.logo-mark { display: inline-block; width: 24px; height: 24px; background: var(--lime); border-radius: 6px; }
+	.site-header nav { display: flex; gap: 1.5rem; align-items: center; }
+	.site-header nav a { color: var(--text-muted); font-weight: 500; font-size: 0.95rem; }
+	.site-header nav a:hover { color: var(--text); text-decoration: none; }
+	.site-header nav a.active { color: var(--text); }
+	.cta-pill {
+		background: var(--lime); color: var(--bg) !important;
+		padding: 8px 18px; border-radius: 999px;
+		font-weight: 700 !important; font-size: 0.85rem !important;
+		transition: transform 0.15s;
+	}
+	.cta-pill:hover { transform: translateY(-2px); text-decoration: none; }
+
+	/* 본문 */
+	main {
+		max-width: 1100px;
+		margin: 0 auto;
+		padding: 2rem;
+	}
+
+	.intro {
+		padding: 2rem 0 3rem;
+	}
+
+	.kicker {
+		color: var(--lime); font-size: 0.85rem; font-weight: 700;
+		letter-spacing: 0.15em; margin: 0 0 1rem;
+	}
+
+	.intro h1 {
+		font-size: 4rem; font-weight: 900; line-height: 0.95;
+		letter-spacing: -0.04em; margin: 0 0 1rem;
+	}
+
+	.accent { color: var(--lime); }
+
+	.lead {
+		font-size: 1.1rem; color: var(--text-muted);
+		max-width: 540px; margin: 0;
+	}
+
+	/* 게임 그리드 */
+	.game-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1.25rem;
+	}
+
+	.game-card {
+		display: block;
+		background: var(--surface);
+		border-radius: 16px;
+		color: var(--text);
+		overflow: hidden;
+		transition: transform 0.15s, background 0.15s;
+	}
+
+	.game-card:hover {
+		text-decoration: none;
+		transform: translateY(-4px);
+		background: var(--surface-light);
+	}
+
+	/* 작업중/계획중은 약간 흐릿하게 */
+	.game-card.status-wip,
+	.game-card.status-planned {
+		opacity: 0.85;
+	}
+
+	.game-thumb {
+		position: relative;
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.thumb-lime { background: var(--lime); }
+	.thumb-pink { background: var(--pink); }
+	.thumb-cyan { background: var(--cyan); }
+
+	.thumb-emoji {
+		font-size: 4rem;
+		filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.2));
+	}
+
+	.badge {
+		position: absolute;
+		top: 12px;
+		right: 12px;
+		background: var(--bg);
+		color: var(--text);
+		font-size: 0.7rem;
+		font-weight: 700;
+		padding: 4px 10px;
+		border-radius: 999px;
+		letter-spacing: 0.08em;
+	}
+
+	.game-info {
+		padding: 1.25rem;
+	}
+
+	.game-card h3 {
+		font-size: 1.2rem;
+		font-weight: 800;
+		margin: 0 0 0.4rem;
+		letter-spacing: -0.02em;
+		line-height: 1.2;
+	}
+
+	.game-card p {
+		color: var(--text-muted);
+		margin: 0 0 0.75rem;
+		font-size: 0.9rem;
+		line-height: 1.5;
+	}
+
+	.tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.tag {
+		color: var(--lime);
+		font-size: 0.8rem;
+	}
+
+	/* 푸터 */
+	.site-footer {
+		max-width: 1100px; margin: 4rem auto 0; padding: 2rem;
+		border-top: 1px solid var(--border);
+		color: var(--text-muted); font-size: 0.9rem; text-align: center;
+	}
+
+	@media (max-width: 640px) {
+		.site-header { padding: 1rem; flex-wrap: wrap; gap: 1rem; }
+		.site-header nav { gap: 1rem; font-size: 0.85rem; }
+		main { padding: 1rem; }
+		.intro h1 { font-size: 2.75rem; }
+		.game-grid { grid-template-columns: 1fr; }
+	}
+</style>
