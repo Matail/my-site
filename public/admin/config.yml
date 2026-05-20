@@ -1,0 +1,22 @@
+backend:
+  name: github
+  repo: Matail/my-site
+  branch: main
+  base_url: https://decap-oauth.pow01042.workers.dev
+  auth_endpoint: auth
+
+media_folder: "src/assets/blog"
+public_folder: "/src/assets/blog"
+
+collections:
+  - name: "blog"
+    label: "블로그 글"
+    folder: "src/content/blog"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "제목", name: "title", widget: "string" }
+      - { label: "설명", name: "description", widget: "string" }
+      - { label: "발행일", name: "pubDate", widget: "datetime" }
+      - { label: "태그", name: "tags", widget: "list", required: false }
+      - { label: "본문", name: "body", widget: "markdown" }

@@ -30,7 +30,7 @@ const posts = (await getCollection('blog')).sort(
 
 		<section class="posts">
 			{posts.map((post) => (
-				<a href={`/blog/${post.slug}/`} class="post-card">
+				<a href={`/blog/${post.id}/`} class="post-card">
 					<div class="post-meta">
 						<time>{post.data.pubDate.toLocaleDateString('ko-KR')}</time>
 						{post.data.tags && (
