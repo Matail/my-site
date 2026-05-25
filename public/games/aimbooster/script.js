@@ -29,10 +29,10 @@ const MARGIN = 60; // 화면 가장자리 여백
 
 // 시간에 따라 스폰 간격이 짧아짐
 function getSpawnInterval(elapsedSec) {
-	// 시작: 1.2초마다 / 30초 후: 0.4초마다
-	const min = 400;
+	// 시작: 1.2초마다 / 60초 후: 0.3초마다
+	const min = 300;
 	const max = 1200;
-	const ratio = Math.min(elapsedSec / 30, 1);
+	const ratio = Math.min(elapsedSec / 60, 1);
 	return max - (max - min) * ratio;
 }
 
