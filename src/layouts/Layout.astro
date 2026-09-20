@@ -1,22 +1,114 @@
 ---
 import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Intro from '../components/Intro.astro';
+
+interface Props {
+	title?: string;
+	description?: string;
+	/** 현재 페이지 (헤더 메뉴 강조용) */
+	active?: 'games' | 'blog' | 'about' | null;
+	/** 3D 인트로 재생 (홈에서만) */
+	intro?: boolean;
+	/** 본문 폭 — 글 읽는 페이지는 narrow */
+	width?: 'wide' | 'narrow';
+}
+
+const {
+	title = 'my-site — 심야 작업실',
+	description = '한 명이 만드는 작은 게임 스튜디오. 브라우저에서 바로 즐길 수 있는 게임을 만들고, 만드는 과정을 기록합니다.',
+	active = null,
+	intro = false,
+	width = 'wide',
+} = Astro.props;
 ---
 
 <!doctype html>
 <html lang="ko">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<meta name="theme-color" content="#0A0A0F" />
 
-		<!-- Pretendard 폰트 -->
-		<link rel="stylesheet" as="style" crossorigin
-			href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta name="twitter:card" content="summary_large_image" />
 
-		<title>my-site — 작은 게임 스튜디오</title>
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+		<link
+			rel="stylesheet"
+			as="style"
+			crossorigin
+			href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+		/>
+
+		<title>{title}</title>
+
+		<!-- 인트로 재생 여부를 첫 페인트 전에 결정한다 (깜빡임 방지) -->
+		<script is:inline define:vars={{ intro }}>
+			(function () {
+				var el = document.documentElement;
+				var on = false;
+				if (intro) {
+					try {
+						var seen = sessionStorage.getItem('intro-played') === '1';
+						var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+						var replay = location.hash === '#intro' || location.search.indexOf('intro=1') > -1;
+						on = replay || (!seen && !reduce);
+					} catch (e) {
+						on = false;
+					}
+				}
+				el.dataset.intro = on ? 'on' : 'off';
+
+				// 인트로를 실제로 틀 때만 스프라이트를 미리 받는다 (재방문자에겐 낭비 안 되게)
+				if (on) {
+					['south', 'east', 'south-east', 'walk-0', 'walk-1', 'walk-2', 'walk-3'].forEach(function (n) {
+						var link = document.createElement('link');
+						link.rel = 'preload';
+						link.as = 'image';
+						link.href = '/sprites/' + n + '.png';
+						document.head.appendChild(link);
+					});
+				}
+			})();
+		</script>
 	</head>
 	<body>
-		<slot />
+		{intro && <Intro />}
+
+		<div class="page" id="page">
+			<Header active={active} />
+			<main class:list={['main', width]}>
+				<slot />
+			</main>
+			<Footer />
+		</div>
 	</body>
 </html>
+
+<style is:global>
+	/* 인트로가 도는 동안엔 본문을 잠가둔다 */
+	html[data-intro='on'] body {
+		overflow: hidden;
+	}
+	html[data-intro='on'] #page {
+		opacity: 0;
+		pointer-events: none;
+	}
+	html.site-revealed #page {
+		opacity: 1;
+		transition: opacity 0.5s var(--ease-soft);
+	}
+
+	/* 인트로를 끝까지 본 경우엔 노트북 화면 속에서 이미 같은 화면을 보고 있었으므로
+	   페이드 없이 한 프레임에 넘긴다 (겹쳐 페이드하면 중간에 한 번 어두워진다). */
+	html.site-revealed.instant-reveal #page {
+		transition: none;
+	}
+</style>

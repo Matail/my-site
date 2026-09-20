@@ -1,98 +1,167 @@
 ---
-// props로 활성 페이지 받기 — 현재 페이지 메뉴를 강조 표시
-const { active } = Astro.props;
+interface Props {
+	active?: 'games' | 'blog' | 'about' | null;
+}
+const { active = null } = Astro.props;
+
+const nav = [
+	{ href: '/games', label: '게임', key: 'games' },
+	{ href: '/blog', label: '블로그', key: 'blog' },
+	{ href: '/about', label: '소개', key: 'about' },
+];
 ---
 
 <header class="site-header">
-	<a href="/" class="logo">
-		<span class="logo-mark"></span>
-		<span>my-site</span>
-	</a>
-	<nav>
-		<a href="/games" class:list={[{ active: active === 'games' }]}>게임</a>
-		<a href="/blog" class:list={[{ active: active === 'blog' }]}>블로그</a>
-		<a href="/about" class:list={[{ active: active === 'about' }]}>소개</a>
-		<a href="/games" class="cta-pill">PLAY →</a>
-	</nav>
+	<div class="bar wrap">
+		<a href="/" class="logo" aria-label="my-site 홈">
+			<span class="lamp-mark" aria-hidden="true">
+				<span class="cord"></span>
+				<span class="bulb"></span>
+			</span>
+			<span class="wordmark">my<span class="dot">·</span>site</span>
+		</a>
+
+		<nav aria-label="주요 메뉴">
+			{nav.map((item) => (
+				<a href={item.href} class:list={['nav-link', { active: active === item.key }]}>
+					{item.label}
+				</a>
+			))}
+			<a href="/games" class="btn btn-lamp play">
+				PLAY
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+					<polygon points="7 4 20 12 7 20 7 4" />
+				</svg>
+			</a>
+		</nav>
+	</div>
 </header>
 
 <style>
 	.site-header {
+		position: sticky;
+		top: 0;
+		z-index: 50;
+		backdrop-filter: blur(14px) saturate(140%);
+		-webkit-backdrop-filter: blur(14px) saturate(140%);
+		background: linear-gradient(180deg, rgba(10, 10, 15, 0.86), rgba(10, 10, 15, 0.55));
+		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	}
+
+	.bar {
 		display: flex;
+		align-items: center;
 		justify-content: space-between;
-		align-items: center;
-		padding: 1.25rem 2rem;
-		max-width: 1100px;
-		margin: 0 auto;
+		gap: 1rem;
+		height: 68px;
 	}
 
+	/* --- 로고: 매달린 전구 --- */
 	.logo {
-		display: flex;
+		display: inline-flex;
 		align-items: center;
-		gap: 10px;
-		font-weight: 800;
-		font-size: 1.1rem;
+		gap: 0.6rem;
 		color: var(--text);
+		font-weight: 700;
+		font-size: 1.02rem;
+		letter-spacing: -0.03em;
 	}
 
-	.logo:hover {
-		text-decoration: none;
-	}
-
-	.logo-mark {
+	.lamp-mark {
+		position: relative;
 		display: inline-block;
-		width: 24px;
-		height: 24px;
-		background: var(--lime);
-		border-radius: 6px;
+		width: 18px;
+		height: 26px;
 	}
 
+	.cord {
+		position: absolute;
+		top: 0;
+		left: 50%;
+		width: 1px;
+		height: 11px;
+		background: linear-gradient(180deg, transparent, var(--border-lit));
+		transform: translateX(-50%);
+	}
+
+	.bulb {
+		position: absolute;
+		bottom: 2px;
+		left: 50%;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		transform: translateX(-50%);
+		background: var(--lamp);
+		box-shadow:
+			0 0 10px 2px rgba(255, 180, 70, 0.55),
+			0 0 26px 6px rgba(255, 180, 70, 0.22);
+		transition: box-shadow 0.35s var(--ease-soft);
+	}
+
+	.logo:hover .bulb {
+		box-shadow:
+			0 0 14px 3px rgba(255, 180, 70, 0.8),
+			0 0 40px 10px rgba(255, 180, 70, 0.35);
+	}
+
+	.wordmark .dot { color: var(--lamp); }
+
+	/* --- 네비 --- */
 	nav {
 		display: flex;
-		gap: 1.5rem;
 		align-items: center;
+		gap: clamp(0.75rem, 2.5vw, 1.75rem);
 	}
 
-	nav a {
-		color: var(--text-muted);
+	.nav-link {
+		position: relative;
+		color: var(--text-dim);
+		font-size: 0.92rem;
 		font-weight: 500;
-		font-size: 0.95rem;
+		padding: 0.3rem 0;
+		transition: color 0.25s var(--ease-soft);
 	}
 
-	nav a:hover {
+	.nav-link::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		bottom: -2px;
+		width: 100%;
+		height: 1px;
+		background: var(--lamp);
+		transform: scaleX(0);
+		transform-origin: right;
+		transition: transform 0.35s var(--ease-out);
+	}
+
+	.nav-link:hover,
+	.nav-link.active {
 		color: var(--text);
-		text-decoration: none;
 	}
 
-	nav a.active {
-		color: var(--text);
+	.nav-link:hover::after,
+	.nav-link.active::after {
+		transform: scaleX(1);
+		transform-origin: left;
 	}
 
-	.cta-pill {
-		background: var(--lime);
-		color: var(--bg) !important;
-		padding: 8px 18px;
-		border-radius: 999px;
-		font-weight: 700 !important;
-		font-size: 0.85rem !important;
-		transition: transform 0.15s;
+	.nav-link.active::after {
+		box-shadow: 0 0 8px rgba(255, 180, 70, 0.6);
 	}
 
-	.cta-pill:hover {
-		transform: translateY(-2px);
-		text-decoration: none;
+	.play {
+		padding: 0.5rem 1rem;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.1em;
 	}
 
-	@media (max-width: 640px) {
-		.site-header {
-			padding: 1rem;
-			flex-wrap: wrap;
-			gap: 1rem;
-		}
-
-		nav {
-			gap: 1rem;
-			font-size: 0.85rem;
-		}
+	@media (max-width: 560px) {
+		.bar { height: 60px; }
+		.wordmark { display: none; }
+		.nav-link { font-size: 0.88rem; }
 	}
 </style>

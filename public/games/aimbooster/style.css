@@ -1,11 +1,14 @@
 :root {
-	--bg: #1a0b2e;
-	--surface: #2d1b4e;
-	--accent: #6d28d9;
-	--lime: #c4f454;
-	--pink: #f472b6;
-	--text: #ffffff;
-	--text-muted: #a39bb8;
+	/* 사이트 테마(심야 작업실)와 맞춘 색 */
+	--bg: #0A0A0F;
+	--surface: #16161F;
+	--accent: #C9781A;
+	--lime: #FFB446;         /* 주 액센트 = 전등 앰버 */
+	--pink: #C8F45C;         /* 보조 액센트 */
+	--text: #EDEBE6;
+	--text-muted: #9B99A3;
+	--border: #22222E;
+	/* 과녁 색은 게임의 정체성이라 그대로 둔다 */
 	--target-red: #e94b3c;
 	--target-cream: #fdf6e3;
 	--target-gold: #ffc857;

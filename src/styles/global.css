@@ -1,74 +1,333 @@
-/* 컬러 — 시안 C (딥퍼플 + 라임) */
+/* ==========================================================================
+   my-site — 디자인 시스템 "심야 작업실 (late-night studio)"
+   전등 하나 켜진 어두운 방. 따뜻한 앰버 빛 + 차가운 검정 + 라임 포인트.
+   ========================================================================== */
+
 :root {
-	--bg: #1a0b2e;             /* 메인 배경: 깊은 다크 퍼플 */
-	--surface: #2d1b4e;        /* 카드/박스 배경 */
-	--surface-light: #3d2860;  /* 호버 시 */
-	--accent: #6D28D9;         /* 진한 보라 (히어로 블록) */
-	--lime: #C4F454;           /* 라임 (메인 액센트, 버튼) */
-	--pink: #F472B6;           /* 보조 액센트 (핑크) */
-	--cyan: #38BDF8;           /* 보조 액센트 (시안) */
-	--text: #ffffff;           /* 본문 글자 */
-	--text-muted: #a39bb8;     /* 흐린 글자 */
-	--border: #3d2860;
+	/* --- 배경 레이어 (깊이 순서대로) --- */
+	--bg-void: #050508;        /* 화면 바깥 / 인트로 암전 */
+	--bg: #0A0A0F;             /* 페이지 기본 */
+	--surface: #101017;        /* 카드 */
+	--surface-2: #16161F;      /* 카드 호버 / 안쪽 블록 */
+	--surface-3: #1D1D28;      /* 입력창, 코드블록 */
+
+	/* --- 선 --- */
+	--border: #22222E;
+	--border-lit: #34343F;     /* 호버 시 살아나는 선 */
+
+	/* --- 글자 --- */
+	--text: #EDEBE6;           /* 따뜻한 오프화이트 — 순백은 눈부심 */
+	--text-dim: #9B99A3;
+	--text-mute: #65646F;
+
+	/* --- 빛 (전등) --- */
+	--lamp: #FFB446;           /* 전구 앰버 — 주 액센트 */
+	--lamp-soft: #FFD79B;      /* 빛 번짐 */
+	--lamp-deep: #C9781A;      /* 그림자 쪽 앰버 */
+
+	/* --- 포인트 색 (소량) --- */
+	--lime: #C8F45C;
+	--pink: #F472B6;
+	--cyan: #57C7F5;
+
+	/* --- 타이포 --- */
+	--font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+	--font-mono: ui-monospace, 'SF Mono', SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace;
+
+	/* --- 간격 / 형태 --- */
+	--page: 1120px;
+	--gutter: clamp(1.25rem, 4vw, 2.5rem);
+	--r-sm: 10px;
+	--r-md: 16px;
+	--r-lg: 24px;
+	--r-full: 999px;
+
+	/* --- 모션 --- */
+	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+	--ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+	/* --- 그림자 --- */
+	--shadow-lift: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
+	--glow-lamp: 0 0 0 1px rgba(255, 180, 70, 0.28), 0 12px 40px -16px rgba(255, 180, 70, 0.4);
 }
 
-/* 기본 리셋 */
-*, *::before, *::after {
-	box-sizing: border-box;
-}
+/* ===== 리셋 ===== */
+*, *::before, *::after { box-sizing: border-box; }
 
 html {
-	font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
-		system-ui, sans-serif;
+	font-family: var(--font-sans);
 	color: var(--text);
 	background: var(--bg);
+	/* 스크롤바 자리를 항상 비워 둔다.
+	   인트로가 도는 동안엔 body가 overflow:hidden 이라 스크롤바가 없는데,
+	   인트로가 끝나며 스크롤바가 생기면 본문 폭이 15px 줄어든다 —
+	   노트북 화면 속 사이트와 진짜 사이트가 넘어가는 바로 그 순간에
+	   가운데 정렬된 내용이 7.5px 옆으로 튀어서 이 한 줄이 꼭 필요하다. */
+	scrollbar-gutter: stable;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+	scroll-behavior: smooth;
 }
 
 body {
 	margin: 0;
 	padding: 0;
-	line-height: 1.6;
+	line-height: 1.65;
+	min-height: 100vh;
+	position: relative;
+	overflow-x: hidden;
+}
+
+/* 페이지 위쪽에서 내려오는 전등 빛 — 모든 페이지의 공통 분위기 */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+	background:
+		radial-gradient(120% 70% at 50% -18%, rgba(255, 180, 70, 0.14) 0%, rgba(255, 180, 70, 0.045) 38%, transparent 70%),
+		radial-gradient(90% 60% at 50% 120%, rgba(90, 80, 130, 0.09) 0%, transparent 65%);
+}
+
+/* 아주 옅은 필름 그레인 — 어두운 화면의 밴딩을 감춰준다 */
+body::after {
+	content: '';
+	position: fixed;
+	inset: -50%;
+	pointer-events: none;
+	z-index: 1;
+	opacity: 0.032;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+body > * { position: relative; z-index: 2; }
+
+/* ===== 타이포 ===== */
+h1, h2, h3, h4 {
+	margin: 0 0 0.5em;
+	font-weight: 800;
+	letter-spacing: -0.035em;
+	line-height: 1.05;
+	text-wrap: balance;
+}
+
+h1 { font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; }
+h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); }
+h3 { font-size: 1.2rem; letter-spacing: -0.02em; }
+
+p { margin: 0 0 1rem; }
+
+a { color: var(--lamp); text-decoration: none; }
+a:hover { color: var(--lamp-soft); }
+
+::selection { background: rgba(255, 180, 70, 0.28); color: #fff; }
+
+:focus-visible {
+	outline: 2px solid var(--lamp);
+	outline-offset: 3px;
+	border-radius: 4px;
+}
+
+/* ===== 공통 유틸 ===== */
+.wrap {
+	width: 100%;
+	max-width: var(--page);
+	margin: 0 auto;
+	padding-inline: var(--gutter);
+}
+
+/* 페이지 뼈대 — 인트로의 노트북 화면 안에서도 같은 레이아웃을 써야 해서 전역에 둔다 */
+.page {
+	display: flex;
+	flex-direction: column;
 	min-height: 100vh;
 }
 
-a {
-	color: var(--lime);
+.main {
+	flex: 1;
+	width: 100%;
+	margin: 0 auto;
+	padding-inline: var(--gutter);
+	padding-bottom: clamp(4rem, 10vw, 8rem);
+}
+
+.main.wide { max-width: var(--page); }
+.main.narrow { max-width: 760px; }
+
+/* 섹션 머리말 위의 작은 대문자 라벨 */
+.kicker {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55em;
+	font-family: var(--font-mono);
+	font-size: 0.72rem;
+	font-weight: 500;
+	letter-spacing: 0.22em;
+	text-transform: uppercase;
+	color: var(--text-mute);
+	margin: 0 0 1.25rem;
+}
+
+.kicker::before {
+	content: '';
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--lamp);
+	box-shadow: 0 0 10px 2px rgba(255, 180, 70, 0.7);
+}
+
+.lead {
+	font-size: clamp(1rem, 1.6vw, 1.12rem);
+	color: var(--text-dim);
+	max-width: 54ch;
+	line-height: 1.7;
+}
+
+.accent { color: var(--lamp); }
+.accent-lime { color: var(--lime); }
+
+/* 빛나는 밑줄 링크 */
+.link-line {
+	position: relative;
+	color: var(--text);
+	font-weight: 500;
+}
+.link-line::after {
+	content: '';
+	position: absolute;
+	left: 0; bottom: -3px;
+	width: 100%; height: 1px;
+	background: currentColor;
+	opacity: 0.25;
+	transform-origin: left;
+	transform: scaleX(0.999);
+	transition: opacity 0.25s var(--ease-soft);
+}
+.link-line:hover { color: var(--lamp); }
+.link-line:hover::after { opacity: 0.8; }
+
+/* ===== 버튼 ===== */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55em;
+	padding: 0.78rem 1.4rem;
+	border-radius: var(--r-full);
+	font-size: 0.92rem;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	border: 1px solid transparent;
+	cursor: pointer;
+	transition: transform 0.2s var(--ease-out), background 0.2s, border-color 0.2s, box-shadow 0.3s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+
+.btn-lamp {
+	background: linear-gradient(180deg, #FFC466, var(--lamp));
+	color: #2A1703;
+	box-shadow: 0 10px 30px -12px rgba(255, 180, 70, 0.55);
+}
+.btn-lamp:hover {
+	color: #2A1703;
+	box-shadow: 0 16px 40px -14px rgba(255, 180, 70, 0.75);
+}
+
+.btn-ghost {
+	background: rgba(255, 255, 255, 0.02);
+	border-color: var(--border);
+	color: var(--text);
+}
+.btn-ghost:hover {
+	border-color: var(--border-lit);
+	background: rgba(255, 255, 255, 0.045);
+	color: var(--text);
+}
+
+/* ===== 카드 ===== */
+.card {
+	position: relative;
+	display: block;
+	background: linear-gradient(180deg, var(--surface), #0D0D13);
+	border: 1px solid var(--border);
+	border-radius: var(--r-md);
+	color: var(--text);
+	overflow: hidden;
+	transition: transform 0.3s var(--ease-out), border-color 0.3s, box-shadow 0.3s;
+}
+.card::after {
+	/* 카드 위쪽에 닿는 빛 */
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 42%);
+	opacity: 0.7;
+}
+.card:hover {
+	transform: translateY(-4px);
+	border-color: var(--border-lit);
+	box-shadow: var(--shadow-lift);
 	text-decoration: none;
 }
 
-a:hover {
-	text-decoration: underline;
+/* ===== 태그 ===== */
+.tag {
+	font-family: var(--font-mono);
+	font-size: 0.7rem;
+	letter-spacing: 0.06em;
+	color: var(--text-mute);
+	border: 1px solid var(--border);
+	border-radius: var(--r-full);
+	padding: 2px 9px;
+	white-space: nowrap;
 }
 
-h1, h2, h3 {
-	margin: 0 0 0.5em;
-	font-weight: 900;
-	letter-spacing: -0.03em;
-	line-height: 1;
+/* ===== 등장 애니메이션 ===== */
+@keyframes rise {
+	from { opacity: 0; transform: translateY(18px); }
+	to { opacity: 1; transform: none; }
 }
 
-/* 등장 애니메이션 — 통통 튀는 느낌 */
-@keyframes pop-in {
-	0% {
-		opacity: 0;
-		transform: translateY(20px) scale(0.8);
-	}
-	60% {
-		transform: translateY(-4px) scale(1.05);
-	}
-	100% {
-		opacity: 1;
-		transform: translateY(0) scale(1);
-	}
+@keyframes glow-in {
+	from { opacity: 0; filter: blur(6px); }
+	to { opacity: 1; filter: none; }
 }
 
-@keyframes fade-up {
-	from {
-		opacity: 0;
-		transform: translateY(20px);
+/* 본문이 아래에서 올라오는 연출.
+   기본값을 "보인다"로 두어서 JS가 없어도 내용이 사라지지 않게 한다. */
+[data-reveal] {
+	animation: rise 0.85s var(--ease-out) backwards;
+	animation-delay: calc(var(--reveal-delay, 0) * 1ms);
+}
+
+/* 인트로가 도는 동안엔 멈춰 있다가, 끝나는 순간 올라온다 */
+html[data-intro='on'] [data-reveal] {
+	animation: none;
+	opacity: 0;
+}
+
+html.site-revealed [data-reveal] {
+	animation: rise 0.85s var(--ease-out) backwards;
+	animation-delay: calc(var(--reveal-delay, 0) * 1ms);
+	opacity: 1;
+}
+
+/* 인트로가 노트북 화면 안에서 이미 등장 연출을 보여줬다면,
+   진짜 페이지는 애니메이션 없이 그 결과 상태 그대로 받아야 이어진다. */
+html.site-revealed.instant-reveal [data-reveal] {
+	animation: none;
+	opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html { scroll-behavior: auto; }
+	*, *::before, *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
 	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+	[data-reveal] { opacity: 1 !important; }
 }

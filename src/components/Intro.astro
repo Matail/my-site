@@ -1,0 +1,481 @@
+---
+import { getCollection } from 'astro:content';
+import Header from './Header.astro';
+import Hero from './Hero.astro';
+
+/* 첫 방문 인트로 (2D 픽셀아트).
+   어두운 방 → 전등이 켜짐 → 캐릭터가 걸어 들어와 정면을 봄 →
+   노트북을 열면 그 화면이 로딩을 마치고 이 사이트가 된다.
+
+   노트북 화면 안에는 실제 사이트와 "같은 컴포넌트"를 그대로 렌더한다.
+   덕분에 화면이 뷰포트를 채우는 순간 진짜 페이지와 한 픽셀도 어긋나지 않는다. */
+
+const games = await getCollection('games');
+const posts = await getCollection('blog');
+const playable = games.filter((g) => g.data.status === 'published').length;
+---
+
+<div id="intro" aria-hidden="true">
+	<canvas id="intro-canvas"></canvas>
+
+	<!-- 노트북 화면 (캔버스 위의 DOM 오버레이) -->
+	<div id="intro-screen-clip">
+		<div id="intro-screen">
+			<div class="boot">
+				<span class="boot-dot"></span>
+				<span class="boot-name">my·site</span>
+				<div class="boot-bar"><i></i></div>
+				<p class="boot-log">불러오는 중…</p>
+			</div>
+
+			<div class="mock" aria-hidden="true" inert>
+				<Header />
+				<main class="main wide">
+					<Hero playable={playable} posts={posts.length} />
+				</main>
+			</div>
+		</div>
+	</div>
+
+	<div class="intro-ui">
+		<p class="loading" id="intro-loading">
+			<span class="dot"></span>
+			<span class="label">불 켜는 중…</span>
+		</p>
+		<button type="button" class="skip" id="intro-skip">
+			건너뛰기 <kbd>ESC</kbd>
+		</button>
+	</div>
+</div>
+
+<style>
+	#intro {
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		background: #05050a;
+		display: none;
+		opacity: 1;
+		transition: opacity 0.5s var(--ease-soft);
+	}
+
+	:global(html[data-intro='on']) #intro {
+		display: block;
+	}
+
+	#intro.done {
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	/* 끝까지 재생한 경우엔 페이드 없이 한 프레임에 교체한다.
+	   노트북 화면 속 사이트와 진짜 사이트는 같은 컴포넌트라 픽셀이 똑같은데,
+	   둘을 겹쳐 놓고 서로 반대로 페이드하면 중간에 합성 밝기가 25% 떨어져
+	   "한 번 어두워졌다 돌아오는" 깜빡임이 생긴다. (건너뛰기는 그림이 다르므로 페이드.) */
+	:global(html.instant-reveal) #intro.done {
+		transition: none;
+	}
+
+	#intro-canvas {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+		image-rendering: pixelated;
+	}
+
+	/* --- 노트북 화면 --- */
+	#intro-screen-clip {
+		position: absolute;
+		left: 0;
+		top: 0;
+		overflow: hidden;
+		transform-origin: 0 0;
+		background: var(--bg);
+		opacity: 0;
+		will-change: transform, width, height;
+	}
+
+	#intro-screen {
+		position: absolute;
+		left: 0;
+		top: 0;
+		transform-origin: 0 0;
+		background: var(--bg);
+		overflow: hidden;
+	}
+
+	/* 진짜 페이지의 body::before / body::after 를 화면 안에도 똑같이 깐다.
+	   이게 없으면 노트북 화면 속 사이트에는 위쪽 전등 빛과 그레인이 빠져 있어서,
+	   인트로가 끝나고 진짜 페이지로 넘어가는 순간 화면 전체가 살짝 밝아진다. */
+	#intro-screen::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 0;
+		background:
+			radial-gradient(120% 70% at 50% -18%, rgba(255, 180, 70, 0.14) 0%, rgba(255, 180, 70, 0.045) 38%, transparent 70%),
+			radial-gradient(90% 60% at 50% 120%, rgba(90, 80, 130, 0.09) 0%, transparent 65%);
+	}
+
+	#intro-screen::after {
+		content: '';
+		position: absolute;
+		inset: -50%;
+		pointer-events: none;
+		z-index: 1;
+		opacity: 0.032;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+	}
+
+	/* 본문은 그 위(z-index 2)에 — 진짜 페이지의 `body > *` 규칙과 같은 층 구조다.
+	   (.boot 은 이미 absolute + z-index 2 라 건드리지 않는다.
+	    `#intro-screen > *` 로 뭉뚱그리면 ID 선택자가 .boot 의 absolute 를 덮어써서
+	    부팅 화면이 문서 흐름에 끼어들고, 그만큼 사이트가 아래로 밀려난다.) */
+	#intro-screen .mock {
+		position: relative;
+		z-index: 2;
+	}
+
+	/* 부팅 화면 */
+	.boot {
+		position: absolute;
+		inset: 0;
+		/* 작은 노트북 화면에서도 읽히도록 부팅 UI만 확대한다 (index.js 가 값을 넣는다) */
+		transform: scale(var(--boot-scale, 1));
+		transform-origin: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.9rem;
+		background: var(--bg);
+		z-index: 2;
+		transition: opacity 0.35s var(--ease-soft);
+	}
+
+	#intro-screen.booted .boot {
+		opacity: 0;
+	}
+
+	.boot-dot {
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--lamp);
+		box-shadow: 0 0 26px 6px rgba(255, 180, 70, 0.5);
+		animation: boot-pulse 1.1s var(--ease-soft) infinite;
+	}
+
+	@keyframes boot-pulse {
+		0%, 100% { opacity: 0.35; transform: scale(0.9); }
+		50% { opacity: 1; transform: scale(1); }
+	}
+
+	.boot-name {
+		font-size: 1.5rem;
+		font-weight: 700;
+		letter-spacing: -0.03em;
+		color: var(--text);
+	}
+
+	.boot-bar {
+		width: 190px;
+		height: 3px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.08);
+		overflow: hidden;
+	}
+
+	.boot-bar i {
+		display: block;
+		height: 100%;
+		width: 0;
+		border-radius: inherit;
+		background: var(--lamp);
+		box-shadow: 0 0 12px rgba(255, 180, 70, 0.8);
+	}
+
+	#intro-screen.booting .boot-bar i {
+		animation: boot-fill 0.95s var(--ease-out) forwards;
+	}
+
+	@keyframes boot-fill {
+		from { width: 0; }
+		to { width: 100%; }
+	}
+
+	.boot-log {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.16em;
+		color: var(--text-mute);
+	}
+
+	/* 화면 안의 사이트 — 부팅이 끝나면 실제 사이트처럼 올라온다 */
+	.mock {
+		opacity: 0;
+		transition: opacity 0.3s var(--ease-soft);
+		pointer-events: none;
+	}
+
+	#intro-screen.booted .mock {
+		opacity: 1;
+	}
+
+	#intro-screen.booted :global([data-reveal]) {
+		animation: rise 0.7s var(--ease-out) backwards;
+		animation-delay: calc(var(--reveal-delay, 0) * 1ms);
+		opacity: 1;
+	}
+
+	/* --- UI --- */
+	.intro-ui {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.loading {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.18em;
+		color: #56555f;
+		transition: opacity 0.4s var(--ease-soft);
+	}
+
+	.loading.hidden {
+		opacity: 0;
+	}
+
+	.loading .dot {
+		width: 7px;
+		height: 7px;
+		border-radius: 50%;
+		background: #ffb446;
+		box-shadow: 0 0 12px 3px rgba(255, 180, 70, 0.5);
+		animation: boot-pulse 1.6s var(--ease-soft) infinite;
+	}
+
+	.skip {
+		position: absolute;
+		right: clamp(1rem, 3vw, 2rem);
+		bottom: clamp(1rem, 3vw, 2rem);
+		pointer-events: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.9rem;
+		border-radius: 999px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		background: rgba(255, 255, 255, 0.03);
+		color: #85838e;
+		font-family: var(--font-sans);
+		font-size: 0.78rem;
+		cursor: pointer;
+		opacity: 0;
+		animation: skip-in 0.6s var(--ease-out) 1.2s forwards;
+		transition: color 0.25s, border-color 0.25s, background 0.25s;
+		z-index: 3;
+	}
+
+	.skip:hover {
+		color: #edebe6;
+		border-color: rgba(255, 180, 70, 0.4);
+		background: rgba(255, 180, 70, 0.08);
+	}
+
+	.skip kbd {
+		font-family: var(--font-mono);
+		font-size: 0.62rem;
+		padding: 1px 5px;
+		border-radius: 4px;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		color: #65646f;
+	}
+
+	@keyframes skip-in {
+		to { opacity: 1; }
+	}
+
+	@media (max-width: 560px) {
+		.skip { font-size: 0.72rem; padding: 0.45rem 0.75rem; }
+		.boot-name { font-size: 1.2rem; }
+		.boot-bar { width: 140px; }
+	}
+</style>
+
+<script>
+	const el = document.getElementById('intro');
+	const canvas = document.getElementById('intro-canvas') as HTMLCanvasElement | null;
+	const clip = document.getElementById('intro-screen-clip');
+	const screenEl = document.getElementById('intro-screen');
+	const loading = document.getElementById('intro-loading');
+	const skipBtn = document.getElementById('intro-skip');
+	const html = document.documentElement;
+
+	let finished = false;
+	let cleanup: (() => void) | null = null;
+
+	/** 인트로를 끝내고 진짜 사이트로 넘긴다 */
+	function finish(immediate = false) {
+		if (finished) return;
+		finished = true;
+		try {
+			sessionStorage.setItem('intro-played', '1');
+		} catch (e) {
+			/* 시크릿 모드 등 — 무시 */
+		}
+		// 화면 안에서 이미 등장 연출을 봤으니, 진짜 페이지는 그 상태 그대로 받는다
+		html.classList.add('site-revealed');
+		if (!immediate) html.classList.add('instant-reveal');
+		html.dataset.intro = 'off';
+		el?.classList.add('done');
+		if (immediate && el) el.style.transition = 'opacity 0.3s var(--ease-soft)';
+		window.setTimeout(() => {
+			el?.remove();
+			cleanup?.();
+		}, immediate ? 350 : 560);
+	}
+
+	async function run() {
+		if (html.dataset.intro !== 'on' || !canvas) return;
+
+		skipBtn?.addEventListener('click', () => finish(true));
+		window.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') finish(true);
+		});
+
+		// 스프라이트를 못 받으면 그냥 사이트를 보여준다
+		const guard = window.setTimeout(() => finish(true), 9000);
+
+		let intro: Awaited<ReturnType<typeof import('../scripts/intro2d/index.js').createIntro2D>>;
+		try {
+			const mod = await import('../scripts/intro2d/index.js');
+			const label = loading?.querySelector('.label');
+			intro = await mod.createIntro2D({
+				canvas,
+				screenClip: clip,
+				screenInner: screenEl,
+				onProgress: (p: number) => {
+					if (label) label.textContent = '불 켜는 중… ' + Math.round(p * 100) + '%';
+				},
+			});
+		} catch (err) {
+			console.warn('[intro] 로드 실패 — 인트로를 건너뜁니다', err);
+			window.clearTimeout(guard);
+			finish(true);
+			return;
+		}
+
+		window.clearTimeout(guard);
+		loading?.classList.add('hidden');
+		if (location.search.includes('t=')) (window as any).__intro = intro;
+
+		const syncScreenSize = () => {
+			const { vw, vh } = intro.resize();
+			if (screenEl) {
+				screenEl.style.width = vw + 'px';
+				screenEl.style.height = vh + 'px';
+			}
+		};
+		syncScreenSize();
+		window.addEventListener('resize', syncScreenSize);
+
+		let stopped = false;
+		cleanup = () => {
+			stopped = true;
+			window.removeEventListener('resize', syncScreenSize);
+			intro.dispose();
+		};
+
+		const start = performance.now();
+		let raf = 0;
+		let booting = false;
+		let booted = false;
+
+		// 연출 튜닝용: /?intro=1&t=5.2 → 그 시점에서 정지.
+		// 정지 중에는 콘솔에서 __setT(5.4) 로 원하는 시점을 찍어볼 수 있다.
+		const q = new URLSearchParams(location.search);
+		const freezeAt = q.get('t');
+		let freeze = freezeAt === null ? null : parseFloat(freezeAt);
+		if (freeze !== null) (window as any).__setT = (v: number) => { freeze = v; };
+
+		/* /?intro=1&t=0&frames=1 → 한 프레임씩 넘겨 보는 막대.
+		   ← → 로 1프레임, Shift+← → 로 10프레임. 연출을 눈으로 검수할 때 쓴다. */
+		if (freeze !== null && q.has('frames')) {
+			const bar = document.createElement('div');
+			bar.style.cssText =
+				'position:fixed;left:0;right:0;bottom:0;z-index:10000;display:flex;gap:10px;align-items:center;' +
+				'padding:8px 14px;background:rgba(10,10,14,.92);border-top:1px solid rgba(255,255,255,.12);' +
+				'font:12px/1.4 ui-monospace,monospace;color:#cfcdd6';
+			const last = Math.round(intro.END * 60);
+			bar.innerHTML =
+				'<button data-s="-10">⏪</button><button data-s="-1">◀</button>' +
+				'<button data-s="1">▶</button><button data-s="10">⏩</button>' +
+				'<input type="range" min="0" max="' + last + '" value="0" style="flex:1">' +
+				'<span style="min-width:15ch"></span>';
+			const range = bar.querySelector('input') as HTMLInputElement;
+			const label = bar.querySelector('span') as HTMLSpanElement;
+			const show = (k: number) => {
+				const f = Math.max(0, Math.min(last, k));
+				range.value = String(f);
+				freeze = f / 60;
+				label.textContent = '#' + f + ' / ' + last + '  ' + (f / 60).toFixed(3) + 's';
+			};
+			range.addEventListener('input', () => show(Number(range.value)));
+			bar.querySelectorAll('button').forEach((b) =>
+				b.addEventListener('click', () => show(Number(range.value) + Number((b as HTMLElement).dataset.s)))
+			);
+			window.addEventListener('keydown', (e) => {
+				if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+				e.preventDefault();
+				show(Number(range.value) + (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 10 : 1));
+			});
+			el?.appendChild(bar);
+			show(Math.round(freeze * 60));
+		}
+
+		const loop = (now: number) => {
+			if (stopped) return;
+			const elapsed = (now - start) / 1000;
+			const t = freeze !== null && !Number.isNaN(freeze) ? freeze : elapsed;
+
+			intro.apply(Math.min(t, intro.END), elapsed);
+
+			// 화면이 켜지는 순간 부팅 막대가 차오르고, 다 차면 사이트가 뜬다
+			if (!booting && t >= intro.T.boot[0]) {
+				booting = true;
+				screenEl?.classList.add('booting');
+			}
+			if (!booted && t >= intro.T.boot[1]) {
+				booted = true;
+				screenEl?.classList.add('booted');
+			}
+			if (freeze !== null) {
+				// 정지 모드에서는 상태만 맞춰준다
+				screenEl?.classList.toggle('booting', t >= intro.T.boot[0]);
+				screenEl?.classList.toggle('booted', t >= intro.T.boot[1]);
+			}
+
+			if (freeze === null && t >= intro.T.handoff[0] + 0.18) finish();
+			if (freeze !== null || t < intro.END + 0.3) raf = requestAnimationFrame(loop);
+		};
+		raf = requestAnimationFrame(loop);
+
+		window.addEventListener('pagehide', () => cancelAnimationFrame(raf), { once: true });
+	}
+
+	run();
+</script>

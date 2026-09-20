@@ -1,28 +1,62 @@
 ---
-// 푸터는 단순해서 props 없음
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-	<p>© {year} my-site · <a href="mailto:hello@example.com">contact</a></p>
+	<div class="wrap inner">
+		<div class="left">
+			<p class="sign">불 꺼지기 전까지, 계속 만드는 중.</p>
+			<p class="copy">© {year} my-site</p>
+		</div>
+
+		<nav class="links" aria-label="푸터 메뉴">
+			<a href="/games" class="link-line">게임</a>
+			<a href="/blog" class="link-line">블로그</a>
+			<a href="/about" class="link-line">소개</a>
+			<a href="mailto:hello@example.com" class="link-line">contact</a>
+			<a href="/?intro=1" class="link-line replay">인트로 다시 보기</a>
+		</nav>
+	</div>
 </footer>
 
 <style>
 	.site-footer {
-		max-width: 1100px;
-		margin: 4rem auto 0;
-		padding: 2rem;
 		border-top: 1px solid var(--border);
-		color: var(--text-muted);
-		font-size: 0.9rem;
-		text-align: center;
+		background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.45));
+		padding: clamp(2rem, 5vw, 3.25rem) 0 clamp(1.75rem, 4vw, 2.5rem);
 	}
 
-	.site-footer a {
-		color: var(--text-muted);
+	.inner {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1.5rem 2rem;
+		align-items: flex-end;
+		justify-content: space-between;
 	}
 
-	.site-footer a:hover {
-		color: var(--lime);
+	.sign {
+		margin: 0 0 0.35rem;
+		font-size: 0.95rem;
+		color: var(--text-dim);
+		letter-spacing: -0.01em;
+	}
+
+	.copy {
+		margin: 0;
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		letter-spacing: 0.08em;
+		color: var(--text-mute);
+	}
+
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		font-size: 0.88rem;
+	}
+
+	.replay {
+		color: var(--text-mute);
 	}
 </style>

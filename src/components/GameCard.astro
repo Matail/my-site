@@ -1,0 +1,177 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+	game: CollectionEntry<'games'>;
+	/** 목록 페이지에서는 설명을 조금 더 보여준다 */
+	detailed?: boolean;
+}
+
+const { game, detailed = false } = Astro.props;
+const d = game.data;
+
+const external = d.type === 'external';
+const disabled = d.url === '#' || d.status === 'planned';
+const badge = d.status === 'wip' ? 'WIP' : d.status === 'planned' ? 'SOON' : null;
+---
+
+<a
+	href={disabled ? undefined : d.url}
+	class:list={['card', 'game-card', `accent-${d.color}`, { disabled }]}
+	target={external ? '_blank' : undefined}
+	rel={external ? 'noopener noreferrer' : undefined}
+	aria-disabled={disabled ? 'true' : undefined}
+>
+	<div class="thumb">
+		<span class="emoji">{d.thumb}</span>
+		{badge && <span class="badge">{badge}</span>}
+		{d.engine && <span class="engine">{d.engine}</span>}
+	</div>
+
+	<div class="body">
+		<h3>{d.title}</h3>
+		<p>{detailed ? d.description : d.shortDescription || d.description}</p>
+
+		{
+			d.tags && d.tags.length > 0 && (
+				<div class="tags">
+					{d.tags.slice(0, 3).map((tag) => (
+						<span class="tag">{tag}</span>
+					))}
+				</div>
+			)
+		}
+
+		<span class="go">
+			{disabled ? '준비 중' : external ? '새 탭에서 열기' : '바로 플레이'}
+			<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<line x1="5" y1="12" x2="19" y2="12" />
+				<polyline points="12 5 19 12 12 19" />
+			</svg>
+		</span>
+	</div>
+</a>
+
+<style>
+	.game-card {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	.game-card.disabled {
+		cursor: default;
+		opacity: 0.72;
+	}
+
+	.game-card.disabled:hover {
+		transform: none;
+		border-color: var(--border);
+		box-shadow: none;
+	}
+
+	/* --- 썸네일 --- */
+	.thumb {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		background: radial-gradient(120% 120% at 50% 0%, var(--tint) 0%, transparent 62%), #0b0b11;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.accent-lime { --tint: rgba(200, 244, 92, 0.22); --ink: var(--lime); }
+	.accent-pink { --tint: rgba(244, 114, 182, 0.2); --ink: var(--pink); }
+	.accent-cyan { --tint: rgba(87, 199, 245, 0.2); --ink: var(--cyan); }
+
+	.emoji {
+		font-size: clamp(2.4rem, 7vw, 3.1rem);
+		line-height: 1;
+		filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.6));
+		transition: transform 0.45s var(--ease-out);
+	}
+
+	.card:hover .emoji {
+		transform: translateY(-4px) scale(1.06) rotate(-4deg);
+	}
+
+	.badge {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		font-family: var(--font-mono);
+		font-size: 0.62rem;
+		letter-spacing: 0.12em;
+		padding: 3px 8px;
+		border-radius: 999px;
+		background: rgba(5, 5, 8, 0.75);
+		border: 1px solid var(--border-lit);
+		color: var(--text-dim);
+	}
+
+	.engine {
+		position: absolute;
+		left: 12px;
+		bottom: 10px;
+		font-family: var(--font-mono);
+		font-size: 0.62rem;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--ink);
+		opacity: 0.85;
+	}
+
+	/* --- 본문 --- */
+	.body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+		padding: 1.05rem 1.15rem 1.2rem;
+		flex: 1;
+	}
+
+	.body h3 {
+		margin: 0;
+		font-size: 1.1rem;
+		font-weight: 700;
+	}
+
+	.body p {
+		margin: 0;
+		font-size: 0.88rem;
+		line-height: 1.6;
+		color: var(--text-mute);
+		flex: 1;
+	}
+
+	.tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+
+	.go {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.35rem;
+		font-size: 0.82rem;
+		font-weight: 600;
+		color: var(--ink);
+		opacity: 0.9;
+	}
+
+	.go svg {
+		transition: transform 0.3s var(--ease-out);
+	}
+
+	.card:hover .go svg {
+		transform: translateX(3px);
+	}
+
+	.disabled .go {
+		color: var(--text-mute);
+	}
+</style>
