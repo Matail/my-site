@@ -29,6 +29,16 @@ const games = defineCollection({
 		color: z.enum(['lime', 'pink', 'cyan']).default('lime'),
 		// 이모지 또는 짧은 텍스트 (썸네일에 표시)
 		thumb: z.string().default('🎮'),
+		// 덱 카드에 깔리는 키아트 (public 기준 경로). 없으면 이모지로 대체된다
+		art: z.string().optional(),
+		// 카드 고유 색 — 레퍼런스처럼 카드마다 화면 전체 색이 바뀐다
+		accent: z.string().optional(),
+		// 카드 레터링에 쓸 표기 (줄바꿈은 | 로). 없으면 title 을 쓴다
+		lettering: z.string().optional(),
+		// 카드에 커서를 올리면 나타나는 픽셀아트 엠블럼 (9프레임 가로 스프라이트 시트)
+		emblem: z.string().optional(),
+		// 키아트가 움직이는 경우: 가로로 이어 붙인 스프라이트 시트와 그 프레임 수
+		artFrames: z.number().int().min(2).optional(),
 		// 태그
 		tags: z.array(z.string()).optional(),
 		// 출시일

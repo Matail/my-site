@@ -7,6 +7,11 @@ type: 'internal'
 engine: 'unity'
 color: 'pink'
 thumb: '✨'
+art: '/art/coming-soon-anim.png'
+artFrames: 9
+accent: '#FFB446'
+lettering: 'COMING|SOON'
+emblem: '/art/emblem-coming-soon.png'
 tags: ['Unity', '준비중']
 releaseDate: '2026-12-01'
 status: 'planned'

@@ -1,127 +1,28 @@
 ---
-/* 홈 히어로. 인트로의 노트북 화면 안에서도 똑같이 쓴다 —
-   같은 마크업·같은 CSS를 쓰기 때문에 화면이 사이트로 넘어갈 때 한 픽셀도 어긋나지 않는다. */
-interface Props {
-	playable: number;
-	posts: number;
-}
-const { playable, posts } = Astro.props;
+/* 홈 맨 위. 인트로의 노트북 화면 안에서도 똑같이 쓴다.
+   같은 마크업·같은 CSS를 쓰기 때문에 화면이 사이트로 넘어갈 때 한 픽셀도 어긋나지 않는다.
+
+   홈에 남은 글씨는 이 한 줄뿐이다. 나머지는 전부 그림이다. */
 ---
 
 <section class="hero">
-	<p class="kicker" data-reveal style="--reveal-delay: 0">INDIE GAME STUDIO · SOLO</p>
-
-	<h1 data-reveal style="--reveal-delay: 90">
-		새벽 세 시,<br />
-		<span class="accent">불은 아직 켜져 있다.</span>
+	<h1 data-reveal style="--reveal-delay: 60">
+		새벽 세 시, <span class="accent">불은 아직 켜져 있다.</span>
 	</h1>
-
-	<p class="lead" data-reveal style="--reveal-delay: 200">
-		한 명이 만드는 작은 게임 스튜디오. 브라우저에서 바로 즐길 수 있는 게임을 만들고,
-		만드는 과정을 남깁니다. 설치도 가입도 없이, 링크 하나면 시작.
-	</p>
-
-	<div class="cta" data-reveal style="--reveal-delay: 300">
-		<a href="/games" class="btn btn-lamp">
-			게임 플레이
-			<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-				<polygon points="7 4 20 12 7 20 7 4" />
-			</svg>
-		</a>
-		<a href="/blog" class="btn btn-ghost">작업 기록 보기</a>
-	</div>
-
-	<dl class="stats" data-reveal style="--reveal-delay: 420">
-		<div>
-			<dt>지금 플레이 가능</dt>
-			<dd>{playable}<span>개</span></dd>
-		</div>
-		<div>
-			<dt>작업 기록</dt>
-			<dd>{posts}<span>편</span></dd>
-		</div>
-		<div>
-			<dt>작업실 상태</dt>
-			<dd class="on"><span class="pulse"></span>ON</dd>
-		</div>
-	</dl>
 </section>
 
 <style>
+	/* 세로 예산이 빠듯하다. 여기서 아낀 픽셀이 그대로 카드 크기가 된다. */
 	.hero {
-		padding: clamp(3.5rem, 11vw, 8rem) 0 clamp(3rem, 7vw, 5rem);
-		position: relative;
+		padding: clamp(1.5rem, 3.4vw, 2.6rem) 0 clamp(0.9rem, 2vw, 1.5rem);
 	}
 
 	.hero h1 {
-		margin: 0 0 1.5rem;
-		max-width: 16ch;
-	}
-
-	.hero .lead {
-		margin: 0 0 2.25rem;
-	}
-
-	.cta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.75rem;
-		margin-bottom: clamp(3rem, 7vw, 4.5rem);
-	}
-
-	.stats {
-		display: flex;
-		flex-wrap: wrap;
-		gap: clamp(1.5rem, 5vw, 3.5rem);
 		margin: 0;
-		padding-top: 1.75rem;
-		border-top: 1px solid var(--border);
-	}
-
-	.stats dt {
-		font-family: var(--font-mono);
-		font-size: 0.68rem;
-		letter-spacing: 0.16em;
-		text-transform: uppercase;
-		color: var(--text-mute);
-		margin-bottom: 0.35rem;
-	}
-
-	.stats dd {
-		margin: 0;
-		font-size: 1.6rem;
+		font-size: clamp(1.5rem, 3.2vw, 2.5rem);
 		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1;
-	}
-
-	.stats dd span {
-		font-size: 0.9rem;
-		font-weight: 500;
-		color: var(--text-mute);
-		margin-left: 0.15em;
-	}
-
-	.stats dd.on {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		font-family: var(--font-mono);
-		font-size: 1.15rem;
-		color: var(--lamp);
-	}
-
-	.pulse {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		background: var(--lamp);
-		box-shadow: 0 0 12px 3px rgba(255, 180, 70, 0.55);
-		animation: pulse 2.4s var(--ease-soft) infinite;
-	}
-
-	@keyframes pulse {
-		0%, 100% { opacity: 0.45; }
-		50% { opacity: 1; }
+		letter-spacing: -0.035em;
+		line-height: 1.18;
+		text-wrap: balance;
 	}
 </style>

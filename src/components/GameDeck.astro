@@ -1,0 +1,951 @@
+---
+/* 게임 덱 — 카드를 한 장씩 넘겨 보는 메인 무대.
+   레퍼런스(howtotalktowhitekidsaboutracism.com)의 "책 넘기기"를 카드로 옮긴 것:
+   · 어두운 무대 한가운데에 원근감 있는 오브젝트 하나
+   · 카드마다 고유색이 있어서 넘길 때마다 화면 전체의 빛이 그 색으로 바뀐다
+   · 넘기는 방법은 네 가지 — 드래그 / 화살표 / 점 / 휠
+   카드에 들어가는 건 오직 게임뿐이다. */
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+	games: CollectionEntry<'games'>[];
+}
+const { games } = Astro.props;
+
+/** '#F32BC8' → '243, 43, 200' (rgba() 안에서 투명도를 섞어 쓰려고) */
+function rgbTriplet(hex: string) {
+	const h = hex.replace('#', '');
+	const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+	return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+}
+
+const cards = games.map((game, i) => {
+	const d = game.data;
+	const accent = d.accent ?? { lime: '#C8F45C', pink: '#F472B6', cyan: '#57C7F5' }[d.color];
+	return {
+		id: game.id,
+		index: i,
+		accent,
+		rgb: rgbTriplet(accent),
+		lines: (d.lettering ?? d.title).split('|'),
+		disabled: d.url === '#' || d.status === 'planned',
+		d,
+	};
+});
+---
+
+<section class="deck" data-deck aria-roledescription="carousel" aria-label="게임 카드">
+	<!-- 활성 카드 색이 무대 전체로 번진다 -->
+	<div class="deck-wash" aria-hidden="true"></div>
+
+	<div class="deck-stage" data-stage>
+		<button class="deck-arrow prev" type="button" data-prev aria-label="이전 카드">
+			<svg viewBox="0 0 40 24" aria-hidden="true"><path d="M13 4 3 12l10 8M3 12h34" /></svg>
+		</button>
+
+		<div class="deck-tilt" data-tilt>
+			<div class="deck-scene" data-scene>
+				<div class="deck-floor" aria-hidden="true"></div>
+
+				{cards.map((c) => (
+					<article
+						class:list={['gcard', { disabled: c.disabled }]}
+						data-card
+						data-index={c.index}
+						data-accent={c.accent}
+						style={`--accent:${c.accent}; --accent-rgb:${c.rgb};`}
+						aria-label={`${c.index + 1}번째 카드: ${c.d.title}`}
+					>
+						<div class="gcard-inner" data-inner>
+							<!-- 카드의 두께. 앞면보다 뒤에 있어서, 기울면 이 판이 옆면처럼 드러난다. -->
+							<div class="gcard-slab" aria-hidden="true"></div>
+
+							<!-- 앞면. 글씨가 없으므로 면 전체가 게임으로 가는 링크다. -->
+							<a
+								class="gcard-face gcard-front"
+								href={c.disabled ? undefined : c.d.url}
+								target={!c.disabled && c.d.type === 'external' ? '_blank' : undefined}
+								rel={!c.disabled && c.d.type === 'external' ? 'noopener noreferrer' : undefined}
+								aria-label={c.disabled ? `${c.d.title} (준비 중)` : `${c.d.title} 플레이`}
+								aria-disabled={c.disabled ? 'true' : undefined}
+								draggable="false"
+							>
+								<div class="gcard-art" data-art>
+									{c.d.art && c.d.artFrames ? (
+										/* 움직이는 키아트: 프레임이 가로로 이어진 시트 한 장을 계속 돌린다 */
+										<span
+											class="gcard-film"
+											style={`background-image:url(${c.d.art}); --n:${c.d.artFrames}; --dur:${(c.d.artFrames * 0.16).toFixed(2)}s`}
+										/>
+									) : c.d.art ? (
+										<img src={c.d.art} alt="" width="400" height="248" draggable="false" loading={c.index === 0 ? 'eager' : 'lazy'} decoding="async" />
+									) : (
+										<span class="gcard-emoji">{c.d.thumb}</span>
+									)}
+								</div>
+
+								<div class="gcard-grain" aria-hidden="true"></div>
+								<div class="gcard-scrim" aria-hidden="true"></div>
+								<div class="gcard-dim" aria-hidden="true"></div>
+
+								<div class="gcard-lettering" aria-hidden="true">
+									{c.lines.map((line, li) => (
+										<span class="line">
+											{[...line].map((ch, ci) => (
+												<span class="ch" style={`--ch:${li * 6 + ci}`}>{ch === ' ' ? ' ' : ch}</span>
+											))}
+										</span>
+									))}
+								</div>
+
+								<!-- 눌리는 버튼. 앞면 전체가 이미 링크이므로 이건 "보이는 손잡이"다 -->
+								<span class="gc-cta" data-cap aria-hidden="true">
+									<span class:list={['gc-play', { off: c.disabled }]} data-cta>
+										<span class="gc-play-cap">
+											{c.disabled ? '준비 중' : 'PLAY'}
+											{!c.disabled && (
+												<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+													<polygon points="7 4 20 12 7 20 7 4" />
+												</svg>
+											)}
+										</span>
+									</span>
+								</span>
+
+								{c.d.emblem && (
+									<span
+										class="gcard-emblem"
+										data-emblem
+										aria-hidden="true"
+										style={`background-image:url(${c.d.emblem})`}
+									/>
+								)}
+
+								<!-- 커서가 있는 자리에 맺히는 빛 -->
+								<div class="gcard-spot" data-spot aria-hidden="true"></div>
+
+								<!-- 넘어갈 때 카드 면을 훑고 지나가는 빛 -->
+								<div class="gcard-sheen" aria-hidden="true"></div>
+							</a>
+
+							<!-- 뒷면. 넘기는 중간에만 보인다 -->
+							<div class="gcard-face gcard-back" aria-hidden="true">
+								<div class="back-mark">
+									<span class="cord"></span>
+									<span class="bulb"></span>
+								</div>
+							</div>
+						</div>
+					</article>
+				))}
+			</div>
+		</div>
+
+		<button class="deck-arrow next" type="button" data-next aria-label="다음 카드">
+			<svg viewBox="0 0 40 24" aria-hidden="true"><path d="M27 4l10 8-10 8M37 12H3" /></svg>
+		</button>
+	</div>
+
+	<!-- 카드 고르개. 쉴 때는 카드 색 점 몇 개, 커서가 오면 독처럼 부풀어
+	     각 게임의 키아트와 이름이 드러난다. -->
+	<div class="deck-dock" data-dock aria-label="카드 고르기">
+		<div class="dock-rail" aria-hidden="true"></div>
+
+		{cards.map((c) => (
+			<button
+				class:list={['dock-item', { off: c.disabled }]}
+				type="button"
+				data-dot
+				data-index={c.index}
+				style={`--accent:${c.accent}; --accent-rgb:${c.rgb};`}
+				aria-label={c.d.title}
+			>
+				<span class="dock-lift">
+					<span class="dock-tile">
+						{c.d.art ? (
+							<img src={c.d.art} alt="" width="400" height="248" loading="lazy" decoding="async" />
+						) : (
+							<span class="dock-emoji">{c.d.thumb}</span>
+						)}
+					</span>
+				</span>
+				<span class="dock-label" aria-hidden="true">{c.d.title}</span>
+				<span class="dock-run" aria-hidden="true"></span>
+			</button>
+		))}
+	</div>
+
+</section>
+
+<style>
+	/* 점 ↔ 타일 모핑을 CSS 가 직접 보간하게 해 주는 등록. JS 는 0 또는 1 만 쓴다. */
+	@property --open {
+		syntax: '<number>';
+		inherits: true;
+		initial-value: 0;
+	}
+
+	/* ==================================================================
+	   무대
+	   ================================================================== */
+	.deck {
+		position: relative;
+		display: grid;
+		grid-template-rows: 1fr auto;
+		min-height: 0;
+		padding: clamp(0.5rem, 1.5vw, 1rem) 0 clamp(0.5rem, 1.5vw, 1rem);
+		/* 넘기는 카드와 번지는 빛이 본문 폭 밖으로 나가야 한다.
+		   가로로 새는 건 body 의 overflow-x: hidden 이 잘라준다. */
+		overflow: visible;
+		/* JS 가 활성 카드 색으로 계속 갱신한다 */
+		--wash: 255, 180, 70;
+		--wash-strength: 1;
+	}
+
+	/* 활성 카드 색이 무대 뒤로 번지는 빛 */
+	.deck-wash {
+		position: absolute;
+		inset: 4% -30% -4%;
+		pointer-events: none;
+		z-index: 0;
+		background:
+			radial-gradient(46% 40% at 50% 52%, rgba(var(--wash), 0.13) 0%, rgba(var(--wash), 0.045) 45%, transparent 74%),
+			radial-gradient(70% 38% at 50% 96%, rgba(var(--wash), 0.035) 0%, transparent 72%);
+		opacity: var(--wash-strength);
+		transition: opacity 0.4s var(--ease-soft);
+	}
+
+	/* 레퍼런스의 어두운 브러시드 표면 — 순검정 대신 아주 옅은 사선 결을 깐다 */
+	.deck::before {
+		content: '';
+		position: absolute;
+		inset: 0 -30%;
+		pointer-events: none;
+		z-index: 0;
+		opacity: 0.5;
+		background-image: repeating-linear-gradient(
+			104deg,
+			transparent 0px,
+			transparent 37px,
+			rgba(255, 255, 255, 0.012) 37px,
+			rgba(255, 255, 255, 0.012) 39px,
+			transparent 39px,
+			transparent 91px,
+			rgba(0, 0, 0, 0.45) 91px,
+			rgba(0, 0, 0, 0.45) 96px
+		);
+		mask-image: radial-gradient(70% 80% at 50% 50%, #000 20%, transparent 85%);
+		-webkit-mask-image: radial-gradient(70% 80% at 50% 50%, #000 20%, transparent 85%);
+	}
+
+	.deck > *:not(.deck-wash) { position: relative; z-index: 1; }
+
+	/* ==================================================================
+	   카드가 서 있는 3D 공간
+	   ================================================================== */
+	.deck-stage {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 0;
+		height: 100%;
+		/* 카드가 "남은 칸" 안에 들어가도록 무대의 가로·세로를 둘 다 재게 한다.
+		   aspect-ratio + height:100% + max-width 조합은 폭만 잘리고 높이는 그대로 남아
+		   비율이 깨지거나 화면 밖으로 삐져나간다. */
+		container-type: size;
+		perspective: 3400px;
+		perspective-origin: 50% 46%;
+		touch-action: pan-y;
+	}
+
+	/* 커서를 따라 기우는 판. 이 요소의 transform 은 anime 의 animatable 이 독점한다 —
+	   render() 는 절대 건드리지 않는다. */
+	.deck-tilt {
+		--ar: 1.6; /* 16 / 10 */
+		position: relative;
+		/* 가로로도 세로로도 무대 안에 들어가는 가장 큰 크기 */
+		/* 헤더·푸터가 없어져 세로가 넉넉해졌다. 그림이 주인공이니 상한도 같이 올린다. */
+		width: min(1000px, 100cqw, calc(100cqh * var(--ar)));
+		aspect-ratio: var(--ar);
+		transform-style: preserve-3d;
+		will-change: transform;
+	}
+
+	.deck-scene {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		transform-style: preserve-3d;
+		will-change: transform;
+		cursor: grab;
+	}
+	.deck-scene.is-grabbing { cursor: grabbing; }
+
+	/* 덱 아래 바닥 그림자 — 레퍼런스의 책 밑 그림자와 같은 역할 */
+	/* 덱 아래 바닥 그림자. filter: blur 를 쓰면 3D 가 납작해지므로
+	   번짐은 그라디언트 자체로 만든다. */
+	.deck-floor {
+		position: absolute;
+		left: 2%;
+		right: 2%;
+		bottom: -9%;
+		height: 20%;
+		border-radius: 50%;
+		background: radial-gradient(52% 50% at 50% 50%, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.45) 45%, transparent 73%);
+		transform: translateZ(-140px);
+	}
+
+	/* ==================================================================
+	   카드
+	   ================================================================== */
+	.gcard-front[aria-disabled] { cursor: default; }
+
+	.gcard {
+		position: absolute;
+		inset: 0;
+		transform-style: preserve-3d;
+		will-change: transform;
+	}
+
+	/* 넘기는 회전은 여기서. 카드 왼쪽 모서리가 경첩이다. */
+	.gcard-inner {
+		position: absolute;
+		inset: 0;
+		transform-origin: left center;
+		transform-style: preserve-3d;
+		will-change: transform;
+	}
+
+	/* 뒤에 깔린 카드를 어둡게 — filter 대신 판을 덮는다 */
+	.gcard-dim {
+		position: absolute;
+		inset: 0;
+		background: #05050a;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	/* 두께 판. 앞면과 같은 크기를 뒤로 밀어 놓기만 하면 된다 —
+	   preserve-3d 안이라 기울일 때 원근이 알아서 옆면을 만들어 준다. */
+	.gcard-slab {
+		position: absolute;
+		inset: 0;
+		border-radius: clamp(12px, 1.6vw, 20px);
+		/* 18px 로는 실제 기울기(약 9도)에서 2~3px 밖에 안 드러나 안 보인다.
+		   32px 이어야 옆면이 한 줄로 읽힌다. */
+		transform: translateZ(-32px);
+		background: linear-gradient(
+			100deg,
+			color-mix(in srgb, var(--accent) 38%, #04040a) 0%,
+			color-mix(in srgb, var(--accent) 18%, #04040a) 60%
+		);
+		box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.4);
+	}
+
+	.gcard-face {
+		position: absolute;
+		inset: 0;
+		border-radius: clamp(12px, 1.6vw, 20px);
+		overflow: hidden;
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
+	}
+
+	.gcard-front {
+		display: block;
+		background: #07070b;
+		cursor: pointer;
+		/* 앞면이 링크가 되면서 브라우저의 "링크 끌어다 놓기"가 끼어든다.
+		   그게 포인터 이벤트를 가로채서 카드를 넘길 수 없게 만든다. */
+		-webkit-user-drag: none;
+		user-select: none;
+		-webkit-user-select: none;
+		box-shadow:
+			0 2px 0 0 rgba(255, 255, 255, 0.05) inset,
+			0 0 0 1px rgba(var(--accent-rgb), 0.22),
+			0 40px 80px -40px rgba(0, 0, 0, 0.95),
+			0 0 90px -50px rgba(var(--accent-rgb), 0.8);
+	}
+
+	/* --- 키아트 --- */
+	/* 층위 시차 때문에 살짝 움직이므로 카드보다 조금 크게 깔아 둔다 */
+	.gcard-art {
+		position: absolute;
+		inset: -3.5%;
+		will-change: transform;
+	}
+	/* 움직이는 키아트.
+	   프레임을 <img> 여러 장으로 겹치지 않고 시트 한 장의 background-position 으로 넘긴다 —
+	   레이아웃도 합성도 건드리지 않아서 3D 로 기울어진 채로도 값이 싸다. */
+	.gcard-film {
+		position: absolute;
+		inset: 0;
+		background-repeat: no-repeat;
+		background-size: calc(var(--n) * 100%) 100%;
+		background-position-x: 0%;
+		image-rendering: pixelated;
+		/* 쉴 때는 첫 프레임에 멈춰 있다가 커서를 올리면 움직인다.
+		   animation 을 껐다 켜면 0번 프레임으로 튀므로, 재생 상태만 바꿔서
+		   멈췄던 그 프레임에서 그대로 이어지게 한다. */
+		animation: filmRun var(--dur) steps(var(--n), jump-none) infinite alternate;
+		animation-play-state: paused;
+	}
+
+	.gcard-front:hover .gcard-film,
+	.gcard-front:focus-visible .gcard-film {
+		animation-play-state: running;
+	}
+
+	/* 손가락으로 보는 화면에는 hover 가 영영 오지 않는다.
+	   그대로 두면 키아트가 0번 프레임에 박제되므로, 그런 기기에서는 계속 돌린다. */
+	@media (hover: none) {
+		.gcard-film { animation-play-state: running; }
+	}
+
+	@keyframes filmRun {
+		from { background-position-x: 0%; }
+		to { background-position-x: 100%; }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.gcard-film { animation: none; }
+	}
+
+	.gcard-art img {
+		-webkit-user-drag: none;
+		pointer-events: none;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		image-rendering: pixelated;
+		transform: scale(1.02);
+		will-change: transform;
+	}
+	.gcard-emoji {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		font-size: clamp(3rem, 9vw, 5rem);
+	}
+
+	/* 도트 확대 때 생기는 밴딩을 덮는 아주 옅은 결 */
+	.gcard-grain {
+		position: absolute;
+		inset: 0;
+		opacity: 0.05;
+		mix-blend-mode: overlay;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+	}
+
+	/* 글자가 앉을 자리를 어둡게 눌러준다 */
+	/* 레터링(왼쪽 위)과 버튼(왼쪽 아래)이 앉을 자리를 눌러주고, 가장자리는 액자처럼 어둡게. */
+	.gcard-scrim {
+		position: absolute;
+		inset: 0;
+		background:
+			radial-gradient(70% 55% at 6% 4%, rgba(3, 3, 7, 0.72) 0%, transparent 72%),
+			radial-gradient(56% 46% at 4% 100%, rgba(3, 3, 7, 0.78) 0%, transparent 74%),
+			radial-gradient(120% 100% at 50% 45%, transparent 44%, rgba(4, 4, 8, 0.5) 100%);
+	}
+
+	/* --- 레터링 (생성한 픽셀 폰트) --- */
+	.gcard-lettering {
+		will-change: transform;
+		position: absolute;
+		left: clamp(1.1rem, 3.4vw, 2.6rem);
+		top: clamp(1rem, 3vw, 2.2rem);
+		display: flex;
+		flex-direction: column;
+		line-height: 0.86;
+		pointer-events: none;
+	}
+	.gcard-lettering .line { display: block; white-space: nowrap; }
+	.gcard-lettering .ch {
+		display: inline-block;
+		font-family: 'Studio Marquee', var(--font-sans);
+		font-size: clamp(1.9rem, 6.2vw, 4.3rem);
+		letter-spacing: -0.015em;
+		color: #fff;
+		text-shadow:
+			0 0 1px rgba(var(--accent-rgb), 0.9),
+			0 0 22px rgba(var(--accent-rgb), 0.55),
+			0 6px 26px rgba(0, 0, 0, 0.85);
+		will-change: transform, opacity;
+	}
+
+	/* --- 눌리는 버튼 ---
+	   레퍼런스(reijowrites 의 "Confirm?")처럼 두께가 있는 물리 버튼이다.
+	   바닥판은 제자리에 있고 뚜껑만 위로 떠 있다가, 누르면 바닥까지 내려앉는다.
+	   높이를 바꾸지 않고 뚜껑을 transform 으로만 움직이므로 레이아웃이 흔들리지 않는다. */
+	/* 자리를 잡는 껍데기. 등장 연출(playEnter)이 이 요소를 맡는다. */
+	.gc-cta {
+		position: absolute;
+		left: clamp(1.1rem, 3.4vw, 2.6rem);
+		bottom: clamp(1.2rem, 3.2vw, 2.3rem);
+		pointer-events: none;
+	}
+
+	/* 커서 시차가 맡는 요소.
+	   여기에 filter 를 걸면 안 된다 — filter 는 backdrop-root 를 만들어서
+	   안쪽 뚜껑의 backdrop-filter 가 카드 그림을 못 보게 된다. 그림자는 바닥판이 낸다. */
+	.gc-play {
+		will-change: transform;
+		position: relative;
+		display: inline-block;
+		border-radius: var(--r-full);
+	}
+
+	/* 바닥판(옆면). 뚜껑이 떠 있는 만큼만 아래로 드러난다. */
+	.gc-play::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: rgba(var(--accent-rgb), 0.17);
+		box-shadow:
+			inset 0 0 0 1px rgba(var(--accent-rgb), 0.3),
+			0 10px 18px rgba(0, 0, 0, 0.5);
+		transition: box-shadow 0.24s var(--ease-out);
+	}
+
+	/* 뚜껑. 반투명 유리 — 뒤의 키아트가 비쳐 보인다.
+	   글씨가 어떤 그림 위에서도 읽히도록 어두운 바닥 한 겹을 깔고 그 위에 카드 색을 얹는다. */
+	.gc-play-cap {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.6rem 1.25rem 0.62rem;
+		border-radius: inherit;
+		font-size: 0.82rem;
+		font-weight: 800;
+		letter-spacing: 0.1em;
+		color: #fff;
+		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+		background:
+			linear-gradient(180deg, rgba(var(--accent-rgb), 0.4) 0%, rgba(var(--accent-rgb), 0.22) 100%),
+			rgba(8, 8, 14, 0.42);
+		backdrop-filter: blur(12px) saturate(150%);
+		-webkit-backdrop-filter: blur(12px) saturate(150%);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.34),
+			inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+		/* 떠 있는 높이 */
+		transform: translateY(-6px);
+		transition: transform 0.16s var(--ease-out), background 0.24s var(--ease-soft);
+	}
+
+	.gc-play svg { flex: none; opacity: 0.9; }
+
+	/* 카드 위에 커서가 오면 조금 더 떠오르고, 누르면 바닥까지 내려앉는다 */
+	.gcard-front:hover .gc-play-cap {
+		transform: translateY(-7px);
+		background:
+			linear-gradient(180deg, rgba(var(--accent-rgb), 0.52) 0%, rgba(var(--accent-rgb), 0.3) 100%),
+			rgba(8, 8, 14, 0.4);
+	}
+	.gcard-front:hover .gc-play::before {
+		box-shadow:
+			inset 0 0 0 1px rgba(var(--accent-rgb), 0.42),
+			0 14px 22px rgba(0, 0, 0, 0.55);
+	}
+	.gcard-front:active .gc-play-cap { transform: translateY(-1px); }
+	.gcard-front:active .gc-play::before {
+		box-shadow:
+			inset 0 0 0 1px rgba(var(--accent-rgb), 0.42),
+			0 4px 8px rgba(0, 0, 0, 0.45);
+	}
+
+	/* 준비 중인 카드는 눌리지 않는다 */
+	.gc-play.off::before {
+		background: rgba(255, 255, 255, 0.05);
+		box-shadow:
+			inset 0 0 0 1px rgba(255, 255, 255, 0.09),
+			0 10px 18px rgba(0, 0, 0, 0.5);
+	}
+	.gc-play.off .gc-play-cap {
+		background: rgba(14, 14, 20, 0.5);
+		color: var(--text-dim);
+		font-weight: 700;
+		text-shadow: none;
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.1),
+			inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+	}
+
+	/* 투명 효과를 줄이길 원하면 채워진 버튼으로 돌려준다 */
+	@media (prefers-reduced-transparency: reduce) {
+		.gc-play-cap {
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			background: rgba(10, 10, 16, 0.94);
+		}
+	}
+
+	/* --- 커서를 올리면 나타나는 픽셀 엠블럼 ---
+	   PixelLab 으로 뽑은 9프레임 가로 스프라이트 시트 하나를 background-position 으로 넘긴다.
+	   alternate 로 되감아 돌리므로 시작과 끝이 같은 그림이고, 이음매가 생길 수 없다. */
+	.gcard-emblem {
+		position: absolute;
+		top: clamp(1rem, 3vw, 2.2rem);
+		right: clamp(1.1rem, 3.4vw, 2.6rem);
+		width: clamp(52px, 7.5vw, 92px);
+		aspect-ratio: 1;
+		pointer-events: none;
+		background-repeat: no-repeat;
+		/* 9프레임이므로 가로로 900% */
+		background-size: 900% 100%;
+		background-position-x: 0%;
+		image-rendering: pixelated;
+		/* 카드 색과 엠블럼 색이 같은 계열이라(핑크 위 핑크) 그냥 얹으면 그림에 묻힌다.
+		   짧은 검정 그림자를 겹쳐 도트 윤곽을 따라 테두리를 만들고, 그 위에 색 글로우를 얹는다. */
+		filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 5px rgba(0, 0, 0, 0.85))
+			drop-shadow(0 5px 12px rgba(0, 0, 0, 0.7))
+			drop-shadow(0 0 14px rgba(var(--accent-rgb), 0.5));
+		opacity: 0;
+		transform: translateY(10px) scale(0.86);
+		transition:
+			opacity 0.28s var(--ease-soft),
+			transform 0.5s var(--ease-out);
+	}
+
+	.gcard-front:hover .gcard-emblem {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+		/* steps(9, jump-none) 이라야 0% 와 100% 를 모두 밟아 9프레임이 정확히 한 장씩 걸린다 */
+		animation: emblemRun 1.15s steps(9, jump-none) infinite alternate;
+	}
+
+	@keyframes emblemRun {
+		from { background-position-x: 0%; }
+		to { background-position-x: 100%; }
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.gcard-front:hover .gcard-emblem { animation: none; }
+	}
+
+	/* --- 커서를 따라다니는 반사광 --- */
+	.gcard-spot {
+		position: absolute;
+		left: 0;
+		top: 0;
+		width: 52%;
+		aspect-ratio: 1;
+		margin: -26% 0 0 -26%;
+		pointer-events: none;
+		opacity: 0;
+		background: radial-gradient(
+			circle at 50% 50%,
+			rgba(255, 255, 255, 0.15) 0%,
+			rgba(var(--accent-rgb), 0.1) 34%,
+			transparent 66%
+		);
+		mix-blend-mode: screen;
+		will-change: transform, opacity;
+	}
+
+	/* --- 넘어가는 동안 면을 훑는 빛 --- */
+	.gcard-sheen {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		opacity: 0;
+		background: linear-gradient(
+			100deg,
+			transparent 30%,
+			rgba(255, 255, 255, 0.1) 46%,
+			rgba(255, 255, 255, 0.26) 52%,
+			rgba(255, 255, 255, 0.08) 58%,
+			transparent 74%
+		);
+	}
+
+	/* --- 뒷면 --- */
+	/* 뒷면은 넘어가는 0.5초 동안만 보인다. 앞면 키아트보다 밝으면 눈이 그쪽으로 끌려가므로
+	   무늬를 깔되 어두운 막을 한 겹 덮어 톤을 낮춘다. */
+	.gcard-back {
+		transform: rotateY(180deg);
+		display: grid;
+		place-items: center;
+		align-content: center;
+		gap: 0.4rem;
+		background-color: #08080d;
+		background-image: url('/art/card-back.png');
+		background-size: 108px;
+		background-repeat: repeat;
+		box-shadow:
+			0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+			0 40px 80px -40px rgba(0, 0, 0, 0.95);
+	}
+	.gcard-back::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background:
+			radial-gradient(58% 52% at 50% 42%, rgba(255, 180, 70, 0.07), transparent 70%),
+			linear-gradient(rgba(6, 6, 11, 0.55), rgba(6, 6, 11, 0.55));
+	}
+	.back-mark {
+		position: relative;
+		width: 20px;
+		height: 44px;
+		z-index: 1;
+	}
+	.back-mark .cord {
+		position: absolute;
+		left: 50%;
+		top: 0;
+		width: 1px;
+		height: 26px;
+		background: linear-gradient(to bottom, transparent, var(--border-lit));
+	}
+	.back-mark .bulb {
+		position: absolute;
+		left: 50%;
+		top: 26px;
+		width: 11px;
+		height: 13px;
+		margin-left: -5.5px;
+		border-radius: 50% 50% 46% 46%;
+		background: var(--lamp);
+		box-shadow: 0 0 16px 5px rgba(255, 180, 70, 0.45);
+	}
+	/* ==================================================================
+	   가장자리 화살표 (레퍼런스의 얇은 꺾쇠)
+	   ================================================================== */
+	.deck-arrow {
+		position: absolute;
+		top: 50%;
+		z-index: 4;
+		margin-top: -28px;
+		width: clamp(34px, 4.5vw, 54px);
+		height: 56px;
+		display: grid;
+		place-items: center;
+		border: 0;
+		background: transparent;
+		color: var(--text-mute);
+		cursor: pointer;
+		opacity: 0.34;
+		/* transform 과 opacity 는 pointer.js 의 자석이 독점한다 — 여기서 트랜지션을 걸면 두 겹으로 밀린다 */
+		transition: color 0.3s var(--ease-soft);
+		will-change: transform, opacity;
+	}
+	.deck-arrow svg {
+		width: 100%;
+		height: auto;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.4;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+	.deck-arrow.prev { left: -6px; }
+	.deck-arrow.next { right: -6px; }
+	.deck-arrow:hover { color: var(--text); }
+	.deck-arrow[disabled] { opacity: 0.1; cursor: default; }
+
+	/* ==================================================================
+	   카드 고르개 — 쉴 때는 점, 커서가 오면 독
+	   `--open` 하나가 0→1 로 가면서 점이 타일로 피어난다.
+	   @property 로 등록해 뒀기 때문에 CSS 가 직접 보간해 준다 (JS 는 0 또는 1 만 쓴다).
+	   ================================================================== */
+	.deck-dock {
+		--open: 0;
+		position: relative;
+		justify-self: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 10px;
+		/* 이름표가 카드의 CTA 를 건드리지 않도록 카드와 독 사이에 띠를 남긴다 */
+		margin-top: clamp(1.3rem, 2.8vw, 2.25rem);
+		padding: 6px 14px;
+		transition: --open 0.42s var(--ease-soft);
+	}
+
+	/* 점들을 감싸는 알약. 쉴 때는 납작하게 눌려 있다. */
+	.dock-rail {
+		position: absolute;
+		inset: 0;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.035);
+		border: 1px solid rgba(255, 255, 255, 0.07);
+		box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset, 0 14px 30px -20px rgba(0, 0, 0, 0.9);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		opacity: calc(0.34 + var(--open) * 0.66);
+		transform: scaleY(calc(0.42 + var(--open) * 0.58));
+		pointer-events: none;
+	}
+
+	.dock-item {
+		position: relative;
+		flex: none;
+		width: 40px;
+		height: 40px;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+		display: grid;
+		place-items: center;
+	}
+
+	/* 확대·들어올림은 여기서만. 이름표는 이 바깥에 있어서 같이 커지지 않는다. */
+	.dock-lift {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 100%;
+		transform-origin: 50% 100%;
+		will-change: transform;
+	}
+
+	/* 점(원) ↔ 타일(둥근 사각형) */
+	.dock-tile {
+		position: relative;
+		width: 40px;
+		height: 40px;
+		overflow: hidden;
+		background: var(--accent);
+		border-radius: calc(50% - var(--open) * 38%);
+		transform: scale(calc(0.24 + var(--open) * 0.76));
+		box-shadow:
+			0 0 0 1px rgba(var(--accent-rgb), calc(0.3 + var(--open) * 0.3)),
+			0 0 18px 2px rgba(var(--accent-rgb), calc(0.15 + var(--open) * 0.3));
+	}
+
+	.dock-tile img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		image-rendering: pixelated;
+		/* 열릴수록 색 점이 진짜 키아트로 바뀐다 — 카드마다 다른 게 여기서 드러난다 */
+		opacity: var(--open);
+	}
+
+	.dock-emoji {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		font-size: 20px;
+		opacity: var(--open);
+	}
+
+	/* 지금 보고 있는 카드는 쉴 때도 점이 조금 더 크고 밝다 */
+	.dock-item[aria-current='true'] .dock-tile {
+		transform: scale(calc(0.36 + var(--open) * 0.64));
+		box-shadow:
+			0 0 0 calc(1px + var(--open) * 1px) rgba(var(--accent-rgb), calc(0.55 + var(--open) * 0.45)),
+			0 0 22px 3px rgba(var(--accent-rgb), calc(0.45 + var(--open) * 0.25));
+	}
+
+	.dock-item.off .dock-tile { filter: saturate(0.75); }
+
+	/* 독 아래 작은 점 — 지금 열려 있는 카드 표시 */
+	.dock-run {
+		position: absolute;
+		left: 50%;
+		bottom: -8px;
+		width: 14px;
+		height: 3px;
+		margin-left: -7px;
+		border-radius: 999px;
+		background: var(--accent);
+		box-shadow: 0 0 10px 1px rgba(var(--accent-rgb), 0.7);
+		opacity: 0;
+		transform: scaleX(0.3);
+		transition: opacity 0.3s var(--ease-soft), transform 0.4s var(--ease-out);
+	}
+	.dock-item[aria-current='true'] .dock-run {
+		opacity: var(--open);
+		transform: scaleX(1);
+	}
+
+	/* 이름표 */
+	.dock-label {
+		position: absolute;
+		left: 50%;
+		bottom: calc(100% + 36px);
+		padding: 5px 10px 6px;
+		border-radius: 9px;
+		background: rgba(12, 12, 18, 0.92);
+		border: 1px solid rgba(255, 255, 255, 0.09);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		font-size: 0.72rem;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		line-height: 1;
+		white-space: nowrap;
+		color: var(--text);
+		opacity: 0;
+		transform: translate(-50%, 7px);
+		pointer-events: none;
+		transition: opacity 0.22s var(--ease-soft), transform 0.28s var(--ease-out);
+	}
+
+	.dock-item.is-peak .dock-label {
+		opacity: 1;
+		transform: translate(-50%, 0);
+	}
+
+	/* 키보드로 들어와도 열린다 (확대는 커서 전용이라 여기선 CSS 만으로) */
+	.deck-dock:focus-within { --open: 1; }
+	.dock-item:focus-visible .dock-label { opacity: 1; transform: translate(-50%, 0); }
+
+	/* ==================================================================
+	   좁은 화면 — 카드가 세로로 길어지고 캡션이 아래를 가득 채운다
+	   ================================================================== */
+	@media (max-width: 760px) {
+		.deck-stage { perspective: 1600px; }
+		.deck-tilt { --ar: 0.8; } /* 4 / 5 */
+		.gcard-lettering .ch { font-size: clamp(1.7rem, 8.5vw, 2.6rem); }
+		.deck-arrow.prev { left: -8px; }
+		.deck-arrow.next { right: -8px; }
+		/* 카드 위에 겹치므로 배경을 조금 깔아야 보인다 */
+		.deck-arrow {
+			border-radius: var(--r-full);
+			background: rgba(6, 6, 11, 0.55);
+			backdrop-filter: blur(6px);
+			-webkit-backdrop-filter: blur(6px);
+			opacity: 0.8;
+			padding: 0 6px;
+			height: 40px;
+			margin-top: -20px;
+		}
+	}
+
+	/* 화면이 너무 낮으면 레이아웃이 스크롤로 풀린다 (Layout 의 fit 탈출구).
+	   그 순간 무대는 부모에게서 높이를 못 받으므로 — 그러면 100cqh 가 0 이 돼 카드가 사라진다 —
+	   여기서 직접 높이를 준다. */
+	@media (max-height: 560px) {
+		.deck-stage {
+			height: min(62vh, 380px);
+			min-height: 240px;
+		}
+	}
+
+	/* 모션을 줄이길 원하는 사람에겐 전부 정지 상태로 보여준다 */
+	@media (prefers-reduced-motion: reduce) {
+		.gcard-sheen,
+		.gcard-spot { display: none; }
+		/* 확대는 없애되, 올려두면 어떤 게임인지는 보여준다 */
+		.deck-dock { transition: none; }
+		.deck-dock:hover,
+		.deck-dock:focus-within { --open: 1; }
+	}
+</style>
+
+<script>
+	import { initDeck } from '../scripts/deck/index.js';
+
+	document.querySelectorAll('[data-deck]').forEach((el) => initDeck(el));
+</script>

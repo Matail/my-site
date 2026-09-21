@@ -7,6 +7,11 @@ type: 'internal'
 engine: 'html'
 color: 'pink'
 thumb: '🎯'
+art: '/art/aimbooster-anim.png'
+artFrames: 9
+accent: '#F32BC8'
+lettering: 'AIM|BOOSTER'
+emblem: '/art/emblem-aimbooster.png'
 tags: ['액션', '반응속도', '캐주얼']
 releaseDate: '2026-05-20'
 status: 'published'

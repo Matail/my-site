@@ -48,6 +48,23 @@ collections:
           - { label: "시안", value: "cyan" }
         default: "lime"
       - { label: "썸네일 이모지/텍스트", name: "thumb", widget: "string", default: "🎮" }
+      - label: "카드 키아트"
+        name: "art"
+        widget: "image"
+        required: false
+        media_folder: "/public/art"
+        public_folder: "/art"
+        hint: "홈 덱 카드와 목록 카드에 깔리는 그림. 가로 400px 안팎의 픽셀아트가 잘 맞습니다"
+      - { label: "카드 색", name: "accent", widget: "string", required: false, pattern: ['^#[0-9A-Fa-f]{6}$', '#RRGGBB 형식으로 적어주세요'], hint: "예: #F32BC8 — 이 카드를 볼 때 무대 빛·점·버튼이 이 색이 됩니다" }
+      - { label: "카드 위 큰 글씨", name: "lettering", widget: "string", required: false, hint: "영문/숫자만. | 를 넣으면 줄바꿈 (예: AIM|BOOSTER). 비우면 제목을 씁니다" }
+      - label: "호버 엠블럼"
+        name: "emblem"
+        widget: "image"
+        required: false
+        media_folder: "/public/art"
+        public_folder: "/art"
+        hint: "카드에 커서를 올리면 나타나는 움직이는 그림. 9칸이 가로로 이어진 스프라이트 시트여야 합니다"
+
       - { label: "태그", name: "tags", widget: "list", required: false }
       - { label: "출시일", name: "releaseDate", widget: "datetime" }
       - label: "상태"

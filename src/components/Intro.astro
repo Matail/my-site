@@ -1,6 +1,4 @@
 ---
-import { getCollection } from 'astro:content';
-import Header from './Header.astro';
 import Hero from './Hero.astro';
 
 /* 첫 방문 인트로 (2D 픽셀아트).
@@ -10,9 +8,6 @@ import Hero from './Hero.astro';
    노트북 화면 안에는 실제 사이트와 "같은 컴포넌트"를 그대로 렌더한다.
    덕분에 화면이 뷰포트를 채우는 순간 진짜 페이지와 한 픽셀도 어긋나지 않는다. */
 
-const games = await getCollection('games');
-const posts = await getCollection('blog');
-const playable = games.filter((g) => g.data.status === 'published').length;
 ---
 
 <div id="intro" aria-hidden="true">
@@ -29,9 +24,8 @@ const playable = games.filter((g) => g.data.status === 'published').length;
 			</div>
 
 			<div class="mock" aria-hidden="true" inert>
-				<Header />
 				<main class="main wide">
-					<Hero playable={playable} posts={posts.length} />
+					<Hero />
 				</main>
 			</div>
 		</div>

@@ -3,6 +3,19 @@
    전등 하나 켜진 어두운 방. 따뜻한 앰버 빛 + 차가운 검정 + 라임 포인트.
    ========================================================================== */
 
+/* 이 사이트를 위해 PixelLab 으로 만든 표제용 픽셀 폰트.
+   32px 비트맵을 아웃라인으로 딴 것이라 크게 키워도 모서리가 살아 있다.
+   라틴 대소문자·숫자·기호만 있고 한글은 없다 — 한글은 Pretendard 가 받는다. */
+@font-face {
+	font-family: 'Studio Marquee';
+	src: url('/fonts/studio-marquee.ttf') format('truetype');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+	/* 라틴·숫자·기호만 이 폰트로 (한글이 넘어오면 폴백이 먹는다) */
+	unicode-range: U+0020-007E;
+}
+
 :root {
 	/* --- 배경 레이어 (깊이 순서대로) --- */
 	--bg-void: #050508;        /* 화면 바깥 / 인트로 암전 */
