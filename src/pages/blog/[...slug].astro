@@ -1,6 +1,10 @@
 ---
+/* 글 한 편 — 아래로 흐르지 않고 옆으로 흐른다.
+   본문이 한 화면 높이의 칸(column)으로 잘리고, 다 읽으면 다음 칸이 오른쪽에서 온다.
+   신문 한 장을 옆으로 넘기며 읽는 것과 같다. 세로 스크롤은 없다. */
 import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import { AUTHOR, CATEGORIES, byNewest, fmtDate, readingTime, type Category } from '../../lib/blog';
 
 export async function getStaticPaths() {
 	const posts = await getCollection('blog');
@@ -12,120 +16,215 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+const d = post.data;
+const cat = CATEGORIES[d.category as Category];
+const mins = readingTime(post.body);
 
-const fmt = (d: Date) =>
-	d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+/* 같은 줄의 다른 글부터 권한다. 그 줄에 없으면 최근 글로 채운다 */
+const all = (await getCollection('blog')).filter((p) => p.id !== post.id).sort(byNewest);
+const sameLine = all.filter((p) => p.data.category === d.category);
+const related = [...sameLine, ...all.filter((p) => p.data.category !== d.category)].slice(0, 2);
 ---
 
-<Layout
-	title={`${post.data.title} · my-site`}
-	description={post.data.description}
-	active="blog"
-	width="narrow"
->
-	<article class="post">
-		<header class="post-head" data-reveal>
-			<a href="/blog" class="back">← 작업 기록</a>
+<Layout title={`${d.title} · my-site`} description={d.description} width="wide" fit={true}>
+	<header class="head" data-reveal>
+		<a href="/blog" class="back">← 작업 기록</a>
 
-			<div class="meta">
-				<time datetime={post.data.pubDate.toISOString()}>{fmt(post.data.pubDate)}</time>
-				{
-					post.data.updatedDate && (
-						<span class="updated">수정 {fmt(post.data.updatedDate)}</span>
-					)
-				}
-				{
-					post.data.tags && post.data.tags.length > 0 && (
-						<div class="tags">
-							{post.data.tags.map((tag) => (
-								<span class="tag">{tag}</span>
-							))}
-						</div>
-					)
-				}
+		<div class="meta">
+			<a class="pill" href={`/blog/c/${d.category}/`}>{cat.label}</a>
+			<time datetime={d.pubDate.toISOString()}>{fmtDate(d.pubDate)}</time>
+			{d.updatedDate && <span class="updated">수정 {fmtDate(d.updatedDate)}</span>}
+			<span class="mins">{mins}분</span>
+			<span class="hint" aria-hidden="true">좌우로 넘기며 읽어요</span>
+		</div>
+	</header>
+
+	<div class="reader-wrap" data-hscroll-wrap data-reveal style="--reveal-delay: 120">
+		<article
+			class="reader"
+			data-hscroll
+			tabindex="0"
+			role="region"
+			aria-label={`${d.title} 본문 — 좌우로 넘겨 읽으세요`}
+		>
+			<div class="title-block">
+				<h1>{d.title}</h1>
+				<p class="lead">{d.description}</p>
+				<div class="by">
+					<img class="avatar" src={AUTHOR.avatar} alt="" width="26" height="26" />
+					<span class="name">{AUTHOR.name}</span>
+				</div>
 			</div>
 
-			<h1>{post.data.title}</h1>
-			<p class="lead">{post.data.description}</p>
-		</header>
+			{
+				d.cover && (
+					<figure class="cover">
+						<img src={d.cover} alt="" width="400" height="248" fetchpriority="high" decoding="async" />
+					</figure>
+				)
+			}
 
-		<div class="prose" data-reveal style="--reveal-delay: 120">
-			<Content />
-		</div>
+			<div class="prose">
+				<Content />
+			</div>
 
-		<footer class="post-foot" data-reveal style="--reveal-delay: 160">
-			<a href="/blog" class="btn btn-ghost">다른 글 보기</a>
-			<a href="/games" class="btn btn-lamp">게임 플레이</a>
-		</footer>
-	</article>
+			{
+				related.length > 0 && (
+					<aside class="more">
+						<h2>이어서 읽기</h2>
+						<ul>
+							{related.map((p) => (
+								<li>
+									<a href={`/blog/${p.id}/`}>
+										<span class="t">{p.data.title}</span>
+										<time datetime={p.data.pubDate.toISOString()}>{fmtDate(p.data.pubDate)}</time>
+									</a>
+								</li>
+							))}
+						</ul>
+						<a class="pill" href="/blog">글 목록으로</a>
+					</aside>
+				)
+			}
+		</article>
+
+		<span class="hs-edge left" aria-hidden="true"></span>
+		<span class="hs-edge right" aria-hidden="true"></span>
+	</div>
 </Layout>
 
 <style>
-	.post {
-		padding: clamp(2.5rem, 7vw, 4.5rem) 0 2rem;
+	/* ===== 머리 (한 줄) ===== */
+	.head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--s-4);
+		flex-wrap: wrap;
+		padding: clamp(1.25rem, 3vw, 2rem) 0 clamp(0.75rem, 2vw, 1.25rem);
 	}
 
 	.back {
-		display: inline-block;
-		font-size: 0.85rem;
+		display: inline-flex;
+		align-items: center;
+		min-height: 36px;
+		font-size: var(--fs-xs);
 		color: var(--text-mute);
-		margin-bottom: 2.5rem;
 	}
 
-	.back:hover {
-		color: var(--lamp);
-	}
+	.back:hover { color: var(--lamp); }
 
 	.meta {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 0.75rem;
-		margin-bottom: 1rem;
+		gap: var(--s-3);
 	}
 
 	.meta time,
-	.updated {
+	.updated,
+	.mins {
 		font-family: var(--font-mono);
-		font-size: 0.72rem;
+		font-size: var(--fs-mono);
+		font-variant-numeric: tabular-nums;
 		letter-spacing: 0.04em;
 		color: var(--text-mute);
 	}
 
-	.tags {
+	/* 처음 보는 방식이라 한 줄로 알려준다 */
+	.hint {
+		font-size: var(--fs-micro);
+		color: var(--text-faint);
+	}
+
+	/* 읽는 칸(.reader)과 가장자리 표시(.hs-edge)는 global.css 의 공용 부품이다 */
+
+	/* ===== 첫 칸: 제목 ===== */
+	.title-block {
+		break-inside: avoid;
+		margin-bottom: var(--s-6);
+	}
+
+	.title-block h1 {
+		font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+		line-height: 1.24;
+		margin: 0 0 var(--s-4);
+	}
+
+	.title-block .lead {
+		font-size: var(--fs-md);
+		line-height: 1.75;
+		margin: 0 0 var(--s-5);
+		max-width: none;
+	}
+
+	.by {
 		display: flex;
-		gap: 0.35rem;
-	}
-
-	.post-head h1 {
-		font-size: clamp(2rem, 5.5vw, 3.1rem);
-		margin: 0 0 1rem;
-	}
-
-	.post-head .lead {
-		font-size: 1.05rem;
-		margin: 0 0 2.5rem;
-		padding-bottom: 2rem;
+		align-items: center;
+		gap: var(--s-2);
+		padding-bottom: var(--s-5);
 		border-bottom: 1px solid var(--border);
+	}
+
+	.by .name {
+		font-size: var(--fs-xs);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		color: var(--text-dim);
+	}
+
+	.avatar {
+		width: 26px;
+		height: 26px;
+		border-radius: 50%;
+		object-fit: cover;
+		object-position: 50% 12%;
+		image-rendering: pixelated;
+		background: rgba(255, 180, 70, 0.12);
+		border: 1px solid rgba(255, 180, 70, 0.35);
+	}
+
+	/* ===== 표지 ===== */
+	.cover {
+		break-inside: avoid;
+		margin: 0 0 var(--s-6);
+		border-radius: var(--r-md);
+		border: 1px solid var(--border);
+		overflow: hidden;
+		background: #0B0B11;
+	}
+
+	.cover img {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 400 / 248;
+		object-fit: cover;
+		image-rendering: pixelated;
 	}
 
 	/* ===== 본문 ===== */
 	.prose {
-		font-size: 1.02rem;
-		line-height: 1.85;
+		font-size: var(--fs-md);
+		line-height: 1.8;
+		letter-spacing: -0.003em;
 		color: #DCD9D3;
 	}
 
 	.prose :global(h2) {
-		font-size: 1.45rem;
-		margin: 2.75rem 0 0.85rem;
+		font-size: var(--fs-xl);
+		line-height: 1.35;
+		margin: 2rem 0 0.9rem;
 		color: var(--text);
+		break-after: avoid;
 	}
 
 	.prose :global(h3) {
-		font-size: 1.15rem;
-		margin: 2rem 0 0.6rem;
+		font-size: var(--fs-lg);
+		line-height: 1.4;
+		margin: 1.75rem 0 0.6rem;
 		color: var(--text);
+		break-after: avoid;
 	}
 
 	.prose :global(p) {
@@ -163,14 +262,23 @@ const fmt = (d: Date) =>
 		color: var(--lamp-soft);
 	}
 
+	/* 칸을 넘어가며 쪼개지면 안 되는 것들 */
+	.prose :global(pre),
+	.prose :global(table),
+	.prose :global(blockquote),
+	.prose :global(figure),
+	.prose :global(img) {
+		break-inside: avoid;
+	}
+
 	.prose :global(pre) {
 		background: var(--surface);
 		border: 1px solid var(--border);
 		padding: 1.1rem 1.25rem;
 		border-radius: var(--r-md);
 		overflow-x: auto;
-		margin: 1.75rem 0;
-		font-size: 0.86rem;
+		margin: 1.5rem 0;
+		font-size: var(--fs-xs);
 		line-height: 1.7;
 	}
 
@@ -183,7 +291,7 @@ const fmt = (d: Date) =>
 	}
 
 	.prose :global(blockquote) {
-		margin: 1.75rem 0;
+		margin: 1.5rem 0;
 		padding: 0.25rem 0 0.25rem 1.1rem;
 		border-left: 2px solid var(--lamp);
 		color: var(--text-dim);
@@ -193,22 +301,96 @@ const fmt = (d: Date) =>
 		max-width: 100%;
 		border-radius: var(--r-md);
 		border: 1px solid var(--border);
-		margin: 1.75rem 0;
+		margin: 1.5rem 0;
 	}
 
 	.prose :global(hr) {
 		border: none;
 		border-top: 1px solid var(--border);
-		margin: 2.5rem 0;
+		margin: 2rem 0;
 	}
 
-	/* ===== 글 아래 ===== */
-	.post-foot {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.75rem;
-		margin-top: 3.5rem;
-		padding-top: 2rem;
+	.prose :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 1.5rem 0;
+		font-size: var(--fs-sm);
+		line-height: 1.6;
+	}
+
+	.prose :global(th),
+	.prose :global(td) {
+		text-align: left;
+		padding: 0.6rem 0.75rem;
+		border-bottom: 1px solid var(--border);
+		vertical-align: top;
+	}
+
+	.prose :global(th) {
+		font-family: var(--font-mono);
+		font-size: var(--fs-mono);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--text-mute);
+		font-weight: 500;
+	}
+
+	/* ===== 마지막 칸: 다음 글 ===== */
+	.more {
+		break-inside: avoid;
+		margin-top: var(--s-6);
+		padding-top: var(--s-5);
 		border-top: 1px solid var(--border);
 	}
+
+	.more h2 {
+		margin: 0 0 var(--s-4);
+		font-size: var(--fs-lg);
+		line-height: 1.3;
+	}
+
+	.more ul {
+		list-style: none;
+		margin: 0 0 var(--s-5);
+		padding: 0;
+	}
+
+	.more li + li {
+		border-top: 1px solid var(--border);
+	}
+
+	.more li a {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--s-4);
+		padding: var(--s-3) 0;
+		color: var(--text);
+	}
+
+	.more li a:hover .t { color: var(--lamp-soft); }
+
+	.more .t {
+		font-size: var(--fs-sm);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		line-height: 1.5;
+	}
+
+	.more time {
+		flex: none;
+		font-family: var(--font-mono);
+		font-size: var(--fs-mono);
+		font-variant-numeric: tabular-nums;
+		color: var(--text-mute);
+	}
+
+	@media (max-height: 560px) {
+		.hint { display: none; }
+	}
 </style>
+
+<script>
+	import { initHScroll } from '../../scripts/hscroll.js';
+	initHScroll();
+</script>

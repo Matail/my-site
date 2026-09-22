@@ -1,0 +1,79 @@
+---
+/* 글 선반 — 세로로 쌓지 않고 옆으로 늘어놓는다.
+   홈의 게임 덱이 카드를 옆으로 넘기듯, 블로그도 한 화면 안에서 좌우로만 움직인다.
+
+   넘기는 법은 넷이다: 휠 / 드래그(터치) / 화살표 키 / 탭 이동.
+   휠은 세로로 굴려도 옆으로 간다 — 마우스에는 가로 휠이 없는 경우가 대부분이다. */
+interface Props {
+	/** 스크린리더에 읽어줄 이름 */
+	label?: string;
+}
+const { label = '글 목록' } = Astro.props;
+---
+
+<div class="shelf-wrap" data-hscroll-wrap>
+	<div
+		class="shelf"
+		data-hscroll
+		tabindex="0"
+		role="region"
+		aria-label={`${label} — 좌우로 넘겨 보세요`}
+	>
+		<slot />
+	</div>
+
+	<span class="hs-edge left" aria-hidden="true"></span>
+	<span class="hs-edge right" aria-hidden="true"></span>
+</div>
+
+<style>
+	.shelf-wrap {
+		position: relative;
+		min-height: 0;
+		min-width: 0;
+		height: 100%;
+	}
+
+	.shelf {
+		display: flex;
+		align-items: stretch;
+		gap: var(--s-4);
+		height: 100%;
+		/* 카드 그림자와 들림이 잘리지 않게 위아래로 조금 여유를 준다 */
+		padding: 6px var(--s-5) var(--s-4) 0;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scroll-snap-type: x proximity;
+		scroll-padding-left: 0;
+		overscroll-behavior-x: contain;
+		scrollbar-width: thin;
+		scrollbar-color: #2B2B38 transparent;
+	}
+
+	.shelf:focus-visible {
+		outline: 2px solid var(--lamp);
+		outline-offset: 4px;
+		border-radius: var(--r-md);
+	}
+
+	.shelf > :global(*) {
+		flex: none;
+		height: 100%;
+		scroll-snap-align: start;
+	}
+
+	/* 가장자리 표시(.hs-edge)는 global.css 의 공용 부품이다 */
+
+	/* 스크롤이 필요 없을 만큼 짧으면 선반이 아니라 그냥 줄이다 */
+	@media (max-height: 560px) {
+		.shelf {
+			height: auto;
+			padding-right: 0;
+		}
+	}
+</style>
+
+<script>
+	import { initHScroll } from '../scripts/hscroll.js';
+	initHScroll();
+</script>

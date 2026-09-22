@@ -19,6 +19,22 @@ collections:
       - { label: "설명", name: "description", widget: "string" }
       - { label: "발행일", name: "pubDate", widget: "datetime" }
       - { label: "태그", name: "tags", widget: "list", required: false }
+      - label: "줄 (분류)"
+        name: "category"
+        widget: "select"
+        options:
+          - { label: "작업 기록", value: "devlog" }
+          - { label: "만드는 법", value: "craft" }
+          - { label: "딴생각", value: "notes" }
+        default: "devlog"
+      - label: "표지 그림"
+        name: "cover"
+        widget: "image"
+        required: false
+        media_folder: "/public/art/blog"
+        public_folder: "/art/blog"
+        hint: "카드와 글 머리에 깔리는 그림. 가로 400px 안팎(400x248)의 픽셀아트가 잘 맞습니다"
+      - { label: "맨 위 큰 카드로 올리기", name: "featured", widget: "boolean", default: false, required: false }
       - { label: "본문", name: "body", widget: "markdown" }
 
   - name: "games"

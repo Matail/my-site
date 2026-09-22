@@ -1,0 +1,41 @@
+---
+/* 글의 줄을 고르는 알약 묶음. 레퍼런스에서는 상단 바에 있지만,
+   이 사이트의 헤더는 사이트 전체 메뉴라 블로그 안쪽에 따로 두었다. */
+import { getCollection } from 'astro:content';
+import { CATEGORIES, CATEGORY_ORDER, type Category } from '../lib/blog';
+
+interface Props {
+	/** 지금 보고 있는 줄. 'all' 이면 블로그 첫 화면 */
+	active?: Category | 'all';
+}
+const { active = 'all' } = Astro.props;
+
+const posts = await getCollection('blog');
+const count = (c: Category) => posts.filter((p) => p.data.category === c).length;
+---
+
+<nav class="bnav" aria-label="글 분류">
+	<a href="/blog" class:list={['pill', { on: active === 'all' }]}>
+		전체
+		<span class="n">{posts.length}</span>
+	</a>
+	{
+		CATEGORY_ORDER.filter((c) => count(c) > 0).map((c) => (
+			<a href={`/blog/c/${c}/`} class:list={['pill', { on: active === c }]}>
+				{CATEGORIES[c].label}
+				<span class="n">{count(c)}</span>
+			</a>
+		))
+	}
+</nav>
+
+<style>
+	/* 알약 자체는 global.css 의 .pill 을 쓴다. 여기서는 줄 세우기만 한다 */
+	.bnav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-2);
+		padding-bottom: clamp(1.5rem, 4vw, 2.25rem);
+	}
+
+</style>

@@ -1,19 +1,12 @@
 ---
-/* 두 가지 모습이 있다.
-   기본: 글을 읽는 페이지 아래에 놓이는 보통 푸터.
-   compact: 홈처럼 글씨가 없어야 하는 곳. 아이콘 알약만 놓이고, 올려야 이름이 펼쳐진다.
+/* 사이트의 유일한 메뉴. 모든 페이지에서 같은 모습이다 —
+   쉴 때는 아이콘만 있는 동그란 알약, 커서를 올린 하나만 옆으로 늘어나며 이름이 드러난다.
 
    아이콘은 이 사이트를 위해 직접 그렸다. 규칙은 하나 —
    24x24 격자, 선 굵기 1.7, 끝과 이음을 둥글게. 카드 옆 화살표와 같은 식구다. */
-interface Props {
-	compact?: boolean;
-}
-const { compact = false } = Astro.props;
-const year = new Date().getFullYear();
-
 const links = [
 	{
-		href: '/games',
+		href: '/',
 		label: '게임',
 		/* 게임패드: 둥근 몸체 + 왼쪽 십자키 + 오른쪽 버튼 두 개 */
 		icon: `<rect x="2.6" y="8.2" width="18.8" height="8.6" rx="4.3" />
@@ -39,13 +32,6 @@ const links = [
 			<path d="M10 18.7h4M10.9 21h2.2" />`,
 	},
 	{
-		href: 'mailto:hello@example.com',
-		label: 'contact',
-		/* 봉투 */
-		icon: `<rect x="2.6" y="5.2" width="18.8" height="13.6" rx="3" />
-			<path d="m4.8 8.3 6.1 4.4a2 2 0 0 0 2.2 0l6.1-4.4" />`,
-	},
-	{
 		href: '/?intro=1',
 		label: '인트로 다시 보기',
 		/* 되감기: 한 바퀴 도는 화살표 */
@@ -55,41 +41,19 @@ const links = [
 ];
 ---
 
-{
-	compact ? (
-		<footer class="rail" aria-label="사이트 메뉴">
-			{links.map((l) => (
-				<a class="rail-item" href={l.href}>
-					<span class="rail-icon" aria-hidden="true">
-						<svg viewBox="0 0 24 24"><Fragment set:html={l.icon} /></svg>
-					</span>
-					<span class="rail-label">{l.label}</span>
-				</a>
-			))}
-		</footer>
-	) : (
-		<footer class="site-footer">
-			<div class="wrap inner">
-				<div class="left">
-					<p class="sign">불 꺼지기 전까지, 계속 만드는 중.</p>
-					<p class="copy">© {year} my-site</p>
-				</div>
-
-				<nav class="links" aria-label="푸터 메뉴">
-					{links.map((l) => (
-						<a href={l.href} class:list={['link-line', { replay: l.href.includes('intro') }]}>
-							{l.label}
-						</a>
-					))}
-				</nav>
-			</div>
-		</footer>
-	)
-}
+<footer class="rail" aria-label="사이트 메뉴">
+	{links.map((l) => (
+		<a class="rail-item" href={l.href}>
+			<span class="rail-icon" aria-hidden="true">
+				<svg viewBox="0 0 24 24"><Fragment set:html={l.icon} /></svg>
+			</span>
+			<span class="rail-label">{l.label}</span>
+		</a>
+	))}
+</footer>
 
 <style>
-	/* ===== 홈: 아이콘 알약 줄 =====
-	   쉴 때는 아이콘만 있는 동그란 알약. 커서를 올리면 그 알약만 옆으로 늘어나며
+	/* 쉴 때는 아이콘만 있는 동그란 알약. 커서를 올리면 그 알약만 옆으로 늘어나며
 	   이름이 드러난다. 늘어나는 건 max-width 라서 레이아웃이 흔들리지 않는다. */
 	.rail {
 		display: flex;
@@ -106,8 +70,11 @@ const links = [
 	.rail-item {
 		display: inline-flex;
 		align-items: center;
-		height: 36px;
-		padding: 0 8px;
+		/* 손가락으로 누르는 유일한 메뉴다. 44px 아래로 내리지 않는다 */
+		height: 44px;
+		min-width: 44px;
+		justify-content: center;
+		padding: 0 12px;
 		border-radius: var(--r-full);
 		border: 1px solid var(--border);
 		background: rgba(255, 255, 255, 0.035);
@@ -115,19 +82,20 @@ const links = [
 		-webkit-backdrop-filter: blur(10px);
 		color: var(--text-mute);
 		transition:
-			background 0.3s var(--ease-soft),
-			border-color 0.3s var(--ease-soft),
-			color 0.3s var(--ease-soft),
-			transform 0.35s var(--ease-out);
+			background var(--t-fast) var(--ease-soft),
+			border-color var(--t-fast) var(--ease-soft),
+			color var(--t-fast) var(--ease-soft);
 	}
 
+	/* 이름이 펼쳐지는 것 자체가 이미 큰 움직임이다. 여기서 알약까지 들면 한 번에 둘이 움직인다 */
 	.rail-item:hover,
 	.rail-item:focus-visible {
 		color: var(--lamp);
 		background: rgba(255, 180, 70, 0.1);
 		border-color: rgba(255, 180, 70, 0.34);
-		transform: translateY(-1px);
 	}
+
+	.rail-item:active { transform: translateY(1px); }
 
 	.rail-icon {
 		display: grid;
@@ -153,14 +121,14 @@ const links = [
 		opacity: 0;
 		overflow: hidden;
 		white-space: nowrap;
-		font-size: 0.78rem;
+		font-size: var(--fs-xs);
 		font-weight: 600;
 		letter-spacing: -0.01em;
 		color: var(--text);
 		transition:
-			max-width 0.42s var(--ease-out),
-			padding-left 0.42s var(--ease-out),
-			opacity 0.26s var(--ease-soft) 0.06s;
+			max-width var(--t-slow) var(--ease-out),
+			padding-left var(--t-slow) var(--ease-out),
+			opacity var(--t-base) var(--ease-soft) 60ms;
 	}
 
 	.rail-item:hover .rail-label,
@@ -172,52 +140,11 @@ const links = [
 	}
 
 	@media (max-width: 560px) {
-		.rail { justify-content: center; gap: 6px; }
+		.rail { justify-content: center; gap: var(--s-2); }
 	}
 
 	/* 모션을 줄이길 원하면 늘어나지 않고 색만 바뀐다 */
 	@media (prefers-reduced-motion: reduce) {
 		.rail-label { transition: none; }
-	}
-
-	/* ===== 글 읽는 페이지: 보통 푸터 ===== */
-	.site-footer {
-		border-top: 1px solid var(--border);
-		background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.45));
-		padding: clamp(2rem, 5vw, 3.25rem) 0 clamp(1.75rem, 4vw, 2.5rem);
-	}
-
-	.inner {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 1.5rem 2rem;
-		align-items: flex-end;
-		justify-content: space-between;
-	}
-
-	.sign {
-		margin: 0 0 0.35rem;
-		font-size: 0.95rem;
-		color: var(--text-dim);
-		letter-spacing: -0.01em;
-	}
-
-	.copy {
-		margin: 0;
-		font-family: var(--font-mono);
-		font-size: 0.72rem;
-		letter-spacing: 0.08em;
-		color: var(--text-mute);
-	}
-
-	.links {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem 1.5rem;
-		font-size: 0.88rem;
-	}
-
-	.replay {
-		color: var(--text-mute);
 	}
 </style>

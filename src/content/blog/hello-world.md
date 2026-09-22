@@ -3,6 +3,8 @@ title: '첫 글이에요'
 description: '블로그 시작했어요. 앞으로 게임 만든 과정이랑 배운 점을 여기에 기록하려고 해요.'
 pubDate: '2026-05-16'
 tags: ['일기']
+category: 'notes'
+cover: '/art/blog/desk-notebook.png'
 ---
 
 # 안녕하세요

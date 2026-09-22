@@ -1,0 +1,206 @@
+---
+/* 글 카드 한 장. 그림 / 제목 / 두어 줄 / 날짜, 이 넷이 전부다.
+   레퍼런스(OpenSea 블로그)의 카드 구성을 그대로 가져오되,
+   흰 종이 대신 이 사이트의 어두운 판 위에 올렸다. */
+import type { CollectionEntry } from 'astro:content';
+import { CATEGORIES, fmtDate, type Category } from '../lib/blog';
+
+interface Props {
+	post: CollectionEntry<'blog'>;
+	/** 줄 안에서 첫 장만 조금 크게 둘 때 */
+	wide?: boolean;
+	/** 제목 단계. 줄(제목이 h2) 안에서는 3, 카드만 있는 페이지에서는 2 */
+	level?: 2 | 3;
+	/** 'shelf' 는 좌우 선반에 세워 둘 때 — 높이를 다 쓰고 폭만 고정한다 */
+	variant?: 'grid' | 'shelf';
+}
+const { post, wide = false, level = 3, variant = 'grid' } = Astro.props;
+const Title = (level === 2 ? 'h2' : 'h3') as 'h2' | 'h3';
+const d = post.data;
+const cat = CATEGORIES[d.category as Category];
+---
+
+<a class:list={['pcard', variant, { wide }]} href={`/blog/${post.id}/`}>
+	<div class="shot">
+		{
+			d.cover ? (
+				<img src={d.cover} alt="" width="400" height="248" loading="lazy" decoding="async" />
+			) : (
+				<span class="fallback" aria-hidden="true">{cat.en}</span>
+			)
+		}
+		<span class="chip">{cat.label}</span>
+	</div>
+
+	<div class="body">
+		<Title>{d.title}</Title>
+		<p>{d.description}</p>
+
+		<div class="foot">
+			<time datetime={d.pubDate.toISOString()}>{fmtDate(d.pubDate)}</time>
+			<span class="go" aria-hidden="true">
+				<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<line x1="5" y1="12" x2="19" y2="12" />
+					<polyline points="12 5 19 12 12 19" />
+				</svg>
+			</span>
+		</div>
+	</div>
+</a>
+
+<style>
+	.pcard {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		background: linear-gradient(180deg, var(--surface), #0D0D13);
+		border: 1px solid var(--border);
+		border-radius: var(--r-md);
+		overflow: hidden;
+		color: var(--text);
+		transition:
+			transform var(--t-base) var(--ease-out),
+			border-color var(--t-fast) var(--ease-soft),
+			box-shadow var(--t-base) var(--ease-soft);
+	}
+
+	.pcard:hover,
+	.pcard:focus-visible {
+		transform: translateY(-3px);
+		border-color: var(--border-lit);
+		box-shadow: var(--shadow-lift);
+	}
+
+	/* --- 그림 --- */
+	.shot {
+		position: relative;
+		aspect-ratio: 400 / 248;
+		background: #0B0B11;
+		border-bottom: 1px solid var(--border);
+		overflow: hidden;
+	}
+
+	.shot img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		/* 픽셀아트라 부드럽게 늘리면 죽는다 */
+		image-rendering: pixelated;
+		transform: scale(1.01);
+		transition: transform var(--t-slow) var(--ease-out);
+	}
+
+	.pcard:hover .shot img {
+		transform: scale(1.04);
+	}
+
+	/* 그림이 없는 글은 카테고리 약자가 대신 앉는다 */
+	.fallback {
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-items: center;
+		font-family: var(--font-mono);
+		font-size: var(--fs-base);
+		letter-spacing: 0.4em;
+		color: var(--text-faint);
+		background:
+			radial-gradient(70% 90% at 50% 0%, rgba(255, 180, 70, 0.08), transparent 70%),
+			repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 6px);
+	}
+
+	.chip {
+		position: absolute;
+		left: var(--s-2);
+		bottom: var(--s-2);
+		font-size: var(--fs-micro);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		padding: 3px 8px;
+		/* 누르는 것과 읽는 것을 모양으로 갈라 둔다 — 알약은 누르는 것, 라벨은 각진 것 */
+		border-radius: 6px;
+		color: var(--text-dim);
+		background: rgba(8, 8, 14, 0.72);
+	}
+
+	/* --- 글 --- */
+	.body {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		padding: 1.1rem 1.2rem 0.95rem;
+	}
+
+	.body :is(h2, h3) {
+		margin: 0 0 0.55rem;
+		font-size: var(--fs-md);
+		line-height: 1.42;
+		letter-spacing: -0.025em;
+		/* 세 줄까지만 — 넘치면 카드 높이가 제각각이 된다 */
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.pcard:hover .body :is(h2, h3) { color: var(--lamp-soft); }
+
+	.body p {
+		margin: 0 0 1.15rem;
+		font-size: var(--fs-sm);
+		line-height: 1.65;
+		color: var(--text-mute);
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-top: auto;
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--border);
+	}
+
+	.foot time {
+		font-family: var(--font-mono);
+		font-size: var(--fs-mono);
+		letter-spacing: 0.04em;
+		color: var(--text-mute);
+	}
+
+	.go {
+		display: grid;
+		place-items: center;
+		color: var(--text-faint);
+		transition: color var(--t-fast) var(--ease-soft), transform var(--t-base) var(--ease-out);
+	}
+
+	.pcard:hover .go {
+		color: var(--lamp);
+		transform: translateX(3px);
+	}
+
+	/* 줄의 첫 장을 크게 두는 경우 — 그림이 조금 더 넓게 눕는다 */
+	.pcard.wide .shot { aspect-ratio: 16 / 9; }
+
+	/* ===== 선반에 선 카드 =====
+	   높이는 선반이 정해 주므로 폭만 잡는다. 그림은 줄어들지 않고 설명이 남는 높이를 갖는다. */
+	.pcard.shelf {
+		width: clamp(226px, 23vw, 288px);
+	}
+
+	.pcard.shelf .shot { flex: none; }
+
+	.pcard.shelf .body p {
+		/* 카드가 길어지면 설명을 조금 더 보여준다 */
+		-webkit-line-clamp: 5;
+		line-clamp: 5;
+	}
+</style>

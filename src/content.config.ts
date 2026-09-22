@@ -9,6 +9,12 @@ const blog = defineCollection({
 		pubDate: z.coerce.date(),
 		updatedDate: z.coerce.date().optional(),
 		tags: z.array(z.string()).optional(),
+		// 글이 서는 줄. 블로그 첫 화면이 이 값으로 줄을 나눈다
+		category: z.enum(['devlog', 'craft', 'notes']).default('devlog'),
+		// 카드와 글 머리에 깔리는 그림 (public 기준 경로). 없으면 글자만 있는 카드가 된다
+		cover: z.string().optional(),
+		// 맨 위 큰 카드로 올릴 글. 여러 개면 가장 최근 것이 올라간다
+		featured: z.boolean().default(false),
 	}),
 });
 

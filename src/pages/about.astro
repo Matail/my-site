@@ -1,4 +1,6 @@
 ---
+/* 소개 — 글 페이지와 같은 방식이다. 아래로 흐르지 않고 칸이 옆으로 이어진다.
+   내용이 짧아서 넓은 화면에서는 두 칸에 다 들어가고, 좁아지면 좌우로 넘긴다. */
 import Layout from '../layouts/Layout.astro';
 
 const facts = [
@@ -12,126 +14,135 @@ const facts = [
 <Layout
 	title="소개 · my-site"
 	description="한 명이 운영하는 작은 인디 게임 스튜디오. 브라우저에서 바로 즐기는 게임을 만듭니다."
-	active="about"
-	width="narrow"
+	width="wide"
+	fit={true}
 >
-	<section class="head">
-		<p class="kicker" data-reveal>ABOUT</p>
-		<h1 data-reveal style="--reveal-delay: 80">
-			안녕하세요,<br />
-			<span class="accent">반가워요.</span>
-		</h1>
-		<p class="lead" data-reveal style="--reveal-delay: 160">
-			웹에서 바로 플레이할 수 있는 작은 게임을 만들고 있어요. 설치도, 가입도, 결제도 없이
-			링크 하나로 시작되는 게임이요.
-		</p>
-	</section>
-
-	<section class="facts" data-reveal style="--reveal-delay: 220">
-		{
-			facts.map((f) => (
-				<div class="fact">
-					<dt>{f.k}</dt>
-					<dd>{f.v}</dd>
-				</div>
-			))
-		}
-	</section>
-
-	<section class="body" data-reveal style="--reveal-delay: 260">
-		<h2>무엇을 만들어요?</h2>
-		<p>
-			브라우저만 있으면 누구나 30초 안에 시작할 수 있는 캐주얼 게임을 좋아해요. 규칙은 한 줄로
-			설명되고, 한 판은 몇 분이면 끝나고, 다시 하고 싶어지는 종류의 게임이요.
-		</p>
-
-		<h2>왜 만들어요?</h2>
-		<p>
-			만드는 과정 자체가 재밌어서요. 작은 게임 하나가 누군가의 5분을 즐겁게 만들 수 있다면,
-			그걸로 충분하다고 생각해요. 그 과정에서 배운 건 <a href="/blog">작업 기록</a>에 남겨둡니다.
-		</p>
-
-		<h2>어떻게 만들어요?</h2>
-		<p>
-			기획은 짧게, 프로토타입은 빠르게. 재미가 확인되면 다듬고, 아니면 접습니다. 접은 것도
-			기록으로는 남겨요.
-		</p>
-
-		<h2>연락</h2>
-		<p>
-			하고 싶은 말이 있다면 <a href="mailto:hello@example.com">hello@example.com</a>으로 보내주세요.
-			버그 제보는 특히 환영합니다.
-		</p>
-	</section>
-
-	<section class="cta card" data-reveal style="--reveal-delay: 300">
-		<div>
-			<h2>먼저 한 판 해볼래요?</h2>
-			<p>설명보다 플레이가 빠릅니다.</p>
+	<header class="head" data-reveal>
+		<div class="titles">
+			<h1>
+				안녕하세요, <span class="accent">반가워요.</span>
+			</h1>
+			<p class="lead">
+				웹에서 바로 플레이할 수 있는 작은 게임을 만들고 있어요. 설치도, 가입도, 결제도 없이
+				링크 하나로 시작되는 게임이요.
+			</p>
 		</div>
-		<a href="/games" class="btn btn-lamp">
-			게임 보러가기
-			<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-				<polygon points="7 4 20 12 7 20 7 4" />
-			</svg>
-		</a>
-	</section>
+	</header>
+
+	<div class="reader-wrap" data-hscroll-wrap data-reveal style="--reveal-delay: 120">
+		<div
+			class="reader"
+			data-hscroll
+			tabindex="0"
+			role="region"
+			aria-label="소개 — 좌우로 넘겨 읽으세요"
+		>
+			<dl class="facts">
+				{
+					facts.map((f) => (
+						<div class="fact">
+							<dt>{f.k}</dt>
+							<dd>{f.v}</dd>
+						</div>
+					))
+				}
+			</dl>
+
+			<div class="body">
+				<h2>무엇을 만들어요?</h2>
+				<p>
+					브라우저만 있으면 누구나 30초 안에 시작할 수 있는 캐주얼 게임을 좋아해요. 규칙은 한 줄로
+					설명되고, 한 판은 몇 분이면 끝나고, 다시 하고 싶어지는 종류의 게임이요.
+				</p>
+
+				<h2>왜 만들어요?</h2>
+				<p>
+					만드는 과정 자체가 재밌어서요. 작은 게임 하나가 누군가의 5분을 즐겁게 만들 수 있다면,
+					그걸로 충분하다고 생각해요. 그 과정에서 배운 건 <a href="/blog">작업 기록</a>에 남겨둡니다.
+				</p>
+
+				<h2>어떻게 만들어요?</h2>
+				<p>
+					기획은 짧게, 프로토타입은 빠르게. 재미가 확인되면 다듬고, 아니면 접습니다. 접은 것도
+					기록으로는 남겨요.
+				</p>
+
+				<h2>연락</h2>
+				<p>
+					하고 싶은 말이 있다면 <a href="mailto:hello@example.com">hello@example.com</a>으로 보내주세요.
+					버그 제보는 특히 환영합니다.
+				</p>
+			</div>
+		</div>
+
+		<span class="hs-edge left" aria-hidden="true"></span>
+		<span class="hs-edge right" aria-hidden="true"></span>
+	</div>
 </Layout>
 
 <style>
 	.head {
-		padding: clamp(3rem, 8vw, 5.5rem) 0 clamp(2rem, 5vw, 3rem);
+		padding: clamp(1.5rem, 3.5vw, 2.75rem) 0 clamp(1rem, 2.5vw, 1.5rem);
 	}
 
-	.head h1 {
-		margin: 0 0 1.25rem;
+	.titles h1 {
+		margin: 0 0 0.6rem;
+		font-size: clamp(1.75rem, 3.6vw, 2.9rem);
 	}
 
-	/* 사실 목록 */
+	.titles .lead {
+		margin: 0;
+		font-size: var(--fs-sm);
+		max-width: 44rem;
+	}
+
+	/* 첫 칸 맨 위 — 숫자판처럼 사실만 적어 둔다 */
 	.facts {
+		break-inside: avoid;
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+		grid-template-columns: repeat(2, 1fr);
 		gap: 1px;
 		background: var(--border);
 		border: 1px solid var(--border);
 		border-radius: var(--r-md);
 		overflow: hidden;
-		margin-bottom: clamp(2.5rem, 6vw, 4rem);
+		margin: 0 0 var(--s-6);
 	}
 
 	.fact {
 		background: var(--bg);
-		padding: 1.1rem 1.25rem;
+		padding: var(--s-3) var(--s-4);
 	}
 
 	.fact dt {
 		font-family: var(--font-mono);
-		font-size: 0.66rem;
-		letter-spacing: 0.14em;
+		font-size: var(--fs-micro);
+		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--text-mute);
-		margin-bottom: 0.4rem;
+		margin-bottom: 0.35rem;
 	}
 
 	.fact dd {
 		margin: 0;
-		font-size: 0.95rem;
+		font-size: var(--fs-sm);
 		font-weight: 600;
-		letter-spacing: -0.01em;
+		letter-spacing: -0.015em;
 	}
 
-	/* 본문 */
 	.body {
-		font-size: 1.02rem;
-		line-height: 1.85;
+		font-size: var(--fs-md);
+		line-height: 1.8;
+		letter-spacing: -0.003em;
 		color: #DCD9D3;
-		padding-bottom: clamp(2rem, 5vw, 3rem);
 	}
 
 	.body h2 {
-		font-size: 1.35rem;
-		margin: 2.5rem 0 0.75rem;
+		font-size: var(--fs-xl);
+		line-height: 1.35;
+		margin: 1.75rem 0 0.8rem;
 		color: var(--text);
+		break-after: avoid;
 	}
 
 	.body h2:first-child {
@@ -139,33 +150,16 @@ const facts = [
 	}
 
 	.body p {
-		margin: 0 0 1.25rem;
+		margin: 0 0 1.35rem;
 	}
 
 	.body a {
 		text-decoration: underline;
 		text-underline-offset: 3px;
 	}
-
-	/* 마무리 CTA */
-	.cta {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1.25rem;
-		padding: clamp(1.5rem, 4vw, 2.25rem);
-		margin-bottom: 1rem;
-	}
-
-	.cta h2 {
-		margin: 0 0 0.3rem;
-		font-size: 1.3rem;
-	}
-
-	.cta p {
-		margin: 0;
-		color: var(--text-mute);
-		font-size: 0.92rem;
-	}
 </style>
+
+<script>
+	import { initHScroll } from '../scripts/hscroll.js';
+	initHScroll();
+</script>

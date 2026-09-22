@@ -28,10 +28,11 @@
 	--border: #22222E;
 	--border-lit: #34343F;     /* 호버 시 살아나는 선 */
 
-	/* --- 글자 --- */
-	--text: #EDEBE6;           /* 따뜻한 오프화이트 — 순백은 눈부심 */
-	--text-dim: #9B99A3;
-	--text-mute: #65646F;
+	/* --- 글자 (괄호 안은 #0A0A0F 배경에서의 명도 대비) --- */
+	--text: #EDEBE6;           /* 16.6:1 — 따뜻한 오프화이트, 순백은 눈부심 */
+	--text-dim: #9B99A3;       /*  7.0:1 — 설명문 */
+	--text-mute: #8A8894;      /*  5.7:1 — 날짜·보조 정보. 예전 #65646F 는 3.4:1 이라 본문에 쓰면 안 된다 */
+	--text-faint: #65646F;     /*  3.4:1 — 글자 금지. 쉬고 있는 아이콘·구분선 같은 장식에만 */
 
 	/* --- 빛 (전등) --- */
 	--lamp: #FFB446;           /* 전구 앰버 — 주 액센트 */
@@ -47,6 +48,21 @@
 	--font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 	--font-mono: ui-monospace, 'SF Mono', SFMono-Regular, 'JetBrains Mono', Menlo, Consolas, monospace;
 
+	/* 글자 크기 사다리 — 화면에 쓰는 크기는 여기 있는 것만 쓴다.
+	   제각각인 값(0.62 / 0.66 / 0.72 / 0.88 …)이 쌓이면 같은 무게의 글씨가 화면마다 달라 보인다. */
+	--fs-micro: 0.6875rem;     /* 11px — 모노 라벨 */
+	--fs-mono: 0.75rem;        /* 12px — 날짜 · 개수 */
+	--fs-xs: 0.8125rem;        /* 13px — 보조 설명 */
+	--fs-sm: 0.9375rem;        /* 15px — 카드 설명 */
+	--fs-base: 1rem;           /* 16px — 기본 */
+	--fs-md: 1.0625rem;        /* 17px — 카드 제목 · 읽는 본문 */
+	--fs-lg: 1.1875rem;        /* 19px — 작은 제목 */
+	--fs-xl: 1.4375rem;        /* 23px — 글 안의 소제목 */
+
+	/* 세로 리듬 — 페이지 머리 / 줄 사이 간격은 여기서만 바꾼다 */
+	--gap-head: clamp(3rem, 7vw, 5rem);
+	--gap-section: clamp(2.5rem, 6vw, 4rem);
+
 	/* --- 간격 / 형태 --- */
 	--page: 1120px;
 	--gutter: clamp(1.25rem, 4vw, 2.5rem);
@@ -58,6 +74,22 @@
 	/* --- 모션 --- */
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 	--ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+
+	/* 시간도 토큰이다. 하나를 모든 곳에 복사하면 가까이 움직이는 것은 굼뜨고,
+	   멀리 움직이는 것은 튄다. 움직이는 거리에 맞춰 넷 중에서 고른다. */
+	--t-tap: 90ms;    /* 눌림 — 즉시 반응해야 한다 */
+	--t-fast: 160ms;  /* 색 · 투명도만 바뀔 때 */
+	--t-base: 260ms;  /* 몇 px 움직이는 것 (카드 들림) */
+	--t-slow: 420ms;  /* 크게 펼쳐지는 것 (아이콘 줄 이름) */
+
+	/* --- 간격 (4px 자) --- */
+	--s-1: 4px;
+	--s-2: 8px;
+	--s-3: 12px;
+	--s-4: 16px;
+	--s-5: 24px;
+	--s-6: 32px;
+	--s-7: 48px;
 
 	/* --- 그림자 --- */
 	--shadow-lift: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
@@ -77,6 +109,9 @@ html {
 	   노트북 화면 속 사이트와 진짜 사이트가 넘어가는 바로 그 순간에
 	   가운데 정렬된 내용이 7.5px 옆으로 튀어서 이 한 줄이 꼭 필요하다. */
 	scrollbar-gutter: stable;
+	/* 밝은 기본 스크롤바가 어두운 화면 옆에 흰 띠로 남는다 */
+	scrollbar-width: thin;
+	scrollbar-color: #2B2B38 transparent;
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
 	scroll-behavior: smooth;
@@ -85,7 +120,7 @@ html {
 body {
 	margin: 0;
 	padding: 0;
-	line-height: 1.65;
+	line-height: 1.7;
 	min-height: 100vh;
 	position: relative;
 	overflow-x: hidden;
@@ -120,19 +155,28 @@ body > * { position: relative; z-index: 2; }
 h1, h2, h3, h4 {
 	margin: 0 0 0.5em;
 	font-weight: 800;
-	letter-spacing: -0.035em;
-	line-height: 1.05;
+	letter-spacing: -0.028em;
+	/* 한글은 받침 때문에 1.05 면 두 줄이 서로 닿는다 */
+	line-height: 1.28;
 	text-wrap: balance;
+	/* 한글은 단어 중간에서 끊으면 안 읽힌다. 큰 글씨일수록 티가 난다 */
+	word-break: keep-all;
+	overflow-wrap: break-word;
 }
 
-h1 { font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; }
-h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); }
-h3 { font-size: 1.2rem; letter-spacing: -0.02em; }
+/* 큰 글씨일수록 자간을 좁히고 줄 간격을 붙인다 (시각 보정) */
+h1 { font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; line-height: 1.1; letter-spacing: -0.04em; }
+h2 { font-size: clamp(1.7rem, 3.4vw, 2.4rem); line-height: 1.2; letter-spacing: -0.032em; }
+h3 { font-size: var(--fs-lg); line-height: 1.35; letter-spacing: -0.022em; }
+h4 { font-size: var(--fs-md); line-height: 1.4; letter-spacing: -0.018em; }
 
 p { margin: 0 0 1rem; }
 
 a { color: var(--lamp); text-decoration: none; }
 a:hover { color: var(--lamp-soft); }
+
+/* 모노로 찍는 숫자(날짜·개수)는 폭을 고정한다. 안 그러면 카드마다 날짜 길이가 미세하게 달라진다 */
+time, .mono { font-variant-numeric: tabular-nums; }
 
 ::selection { background: rgba(255, 180, 70, 0.28); color: #fff; }
 
@@ -142,15 +186,8 @@ a:hover { color: var(--lamp-soft); }
 	border-radius: 4px;
 }
 
-/* ===== 공통 유틸 ===== */
-.wrap {
-	width: 100%;
-	max-width: var(--page);
-	margin: 0 auto;
-	padding-inline: var(--gutter);
-}
-
-/* 페이지 뼈대 — 인트로의 노트북 화면 안에서도 같은 레이아웃을 써야 해서 전역에 둔다 */
+/* ===== 페이지 뼈대 =====
+   인트로의 노트북 화면 안에서도 같은 레이아웃을 써야 해서 전역에 둔다 */
 .page {
 	display: flex;
 	flex-direction: column;
@@ -168,134 +205,141 @@ a:hover { color: var(--lamp-soft); }
 .main.wide { max-width: var(--page); }
 .main.narrow { max-width: 760px; }
 
-/* 섹션 머리말 위의 작은 대문자 라벨 */
-.kicker {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.55em;
-	font-family: var(--font-mono);
-	font-size: 0.72rem;
-	font-weight: 500;
-	letter-spacing: 0.22em;
-	text-transform: uppercase;
-	color: var(--text-mute);
-	margin: 0 0 1.25rem;
-}
-
-.kicker::before {
-	content: '';
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-	background: var(--lamp);
-	box-shadow: 0 0 10px 2px rgba(255, 180, 70, 0.7);
-}
-
+/* 섹션 리드 문장 */
 .lead {
 	font-size: clamp(1rem, 1.6vw, 1.12rem);
 	color: var(--text-dim);
-	max-width: 54ch;
-	line-height: 1.7;
+	/* 한 줄에 한글 35자 안팎. ch 로 재면 "0" 폭 기준이라 한글에서는 절반으로 잡힌다 */
+	max-width: 38rem;
+	line-height: 1.75;
 }
 
 .accent { color: var(--lamp); }
-.accent-lime { color: var(--lime); }
 
-/* 빛나는 밑줄 링크 */
-.link-line {
-	position: relative;
-	color: var(--text);
-	font-weight: 500;
-}
-.link-line::after {
-	content: '';
-	position: absolute;
-	left: 0; bottom: -3px;
-	width: 100%; height: 1px;
-	background: currentColor;
-	opacity: 0.25;
-	transform-origin: left;
-	transform: scaleX(0.999);
-	transition: opacity 0.25s var(--ease-soft);
-}
-.link-line:hover { color: var(--lamp); }
-.link-line:hover::after { opacity: 0.8; }
+/* ===== 알약 — 이 사이트에서 누를 수 있는 것은 이 하나다 =====
+   분류 고르개, "전체 보기", 글 아래 링크가 전부 같은 부품을 쓴다.
+   비슷한 정의를 세 벌 두면 화면마다 높이와 색이 조금씩 어긋난다.
 
-/* ===== 버튼 ===== */
-.btn {
+   상태는 셋뿐이다.
+   · 쉴 때  — 선만 있는 알약
+   · 커서   — 배경만 밝아진다 (한 가지만 바뀐다)
+   · 눌림   — 1px 내려앉는다 (레이아웃은 그대로, transform 만)
+   고른 것(.on)은 전등이 그 위에 켜진 것처럼 앰버로 채운다. 그라데이션도 글로우도 없다 —
+   빛나는 건 이 사이트에서 전구 하나뿐이어야 한다. */
+.pill {
 	display: inline-flex;
 	align-items: center;
-	gap: 0.55em;
-	padding: 0.78rem 1.4rem;
+	gap: var(--s-2);
+	/* 손가락으로 누르는 크기 (좁은 화면에서는 44px) */
+	min-height: 40px;
+	padding: 0 var(--s-4);
+	border: 1px solid var(--border);
 	border-radius: var(--r-full);
-	font-size: 0.92rem;
+	background: rgba(255, 255, 255, 0.03);
+	color: var(--text-dim);
+	font-size: var(--fs-xs);
 	font-weight: 600;
 	letter-spacing: -0.01em;
-	border: 1px solid transparent;
-	cursor: pointer;
-	transition: transform 0.2s var(--ease-out), background 0.2s, border-color 0.2s, box-shadow 0.3s;
-}
-.btn:hover { transform: translateY(-2px); }
-.btn:active { transform: translateY(0); }
-
-.btn-lamp {
-	background: linear-gradient(180deg, #FFC466, var(--lamp));
-	color: #2A1703;
-	box-shadow: 0 10px 30px -12px rgba(255, 180, 70, 0.55);
-}
-.btn-lamp:hover {
-	color: #2A1703;
-	box-shadow: 0 16px 40px -14px rgba(255, 180, 70, 0.75);
-}
-
-.btn-ghost {
-	background: rgba(255, 255, 255, 0.02);
-	border-color: var(--border);
-	color: var(--text);
-}
-.btn-ghost:hover {
-	border-color: var(--border-lit);
-	background: rgba(255, 255, 255, 0.045);
-	color: var(--text);
-}
-
-/* ===== 카드 ===== */
-.card {
-	position: relative;
-	display: block;
-	background: linear-gradient(180deg, var(--surface), #0D0D13);
-	border: 1px solid var(--border);
-	border-radius: var(--r-md);
-	color: var(--text);
-	overflow: hidden;
-	transition: transform 0.3s var(--ease-out), border-color 0.3s, box-shadow 0.3s;
-}
-.card::after {
-	/* 카드 위쪽에 닿는 빛 */
-	content: '';
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 42%);
-	opacity: 0.7;
-}
-.card:hover {
-	transform: translateY(-4px);
-	border-color: var(--border-lit);
-	box-shadow: var(--shadow-lift);
-	text-decoration: none;
-}
-
-/* ===== 태그 ===== */
-.tag {
-	font-family: var(--font-mono);
-	font-size: 0.7rem;
-	letter-spacing: 0.06em;
-	color: var(--text-mute);
-	border: 1px solid var(--border);
-	border-radius: var(--r-full);
-	padding: 2px 9px;
 	white-space: nowrap;
+	cursor: pointer;
+	transition:
+		background var(--t-fast) var(--ease-soft),
+		color var(--t-fast) var(--ease-soft),
+		transform var(--t-tap) var(--ease-soft);
+}
+
+.pill:hover {
+	background: rgba(255, 255, 255, 0.075);
+	color: var(--text);
+}
+
+.pill:active { transform: translateY(1px); }
+
+.pill.on {
+	background: var(--lamp);
+	border-color: var(--lamp);
+	color: #21160A;
+}
+
+.pill.on:hover {
+	background: var(--lamp-soft);
+	color: #21160A;
+}
+
+/* 알약 안의 숫자 — 폭이 고정이라 개수가 바뀌어도 알약이 안 흔들린다 */
+.pill .n {
+	font-family: var(--font-mono);
+	font-size: var(--fs-mono);
+	font-variant-numeric: tabular-nums;
+	color: var(--text-mute);
+}
+
+.pill:hover .n { color: var(--text-dim); }
+.pill.on .n { color: rgba(33, 22, 10, 0.62); }
+
+@media (max-width: 560px) {
+	.pill { min-height: 44px; }
+}
+
+/* ===== 옆으로 흐르는 글 =====
+   높이가 정해져 있으면 칸(column)이 아래가 아니라 오른쪽으로 이어진다 (column-fill: auto).
+   그래서 세로 스크롤 대신 가로 스크롤이 생긴다 — 신문 한 장을 옆으로 넘기는 것과 같다.
+   글 페이지와 소개 페이지가 같은 부품을 쓴다. */
+.reader-wrap {
+	position: relative;
+	min-height: 0;
+	min-width: 0;
+	height: 100%;
+}
+
+.reader {
+	height: 100%;
+	column-width: 30rem;
+	column-gap: clamp(2rem, 4vw, 3.5rem);
+	column-fill: auto;
+	column-rule: 1px solid var(--border);
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding-bottom: var(--s-4);
+	overscroll-behavior-x: contain;
+	scrollbar-width: thin;
+	scrollbar-color: #2B2B38 transparent;
+}
+
+.reader:focus-visible {
+	outline: 2px solid var(--lamp);
+	outline-offset: 4px;
+	border-radius: var(--r-md);
+}
+
+/* 오른쪽으로 더 있다는 표시 — 끝이 어둠에 녹는다 */
+.hs-edge {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: clamp(24px, 4vw, 56px);
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity var(--t-fast) var(--ease-soft);
+}
+
+.hs-edge.left { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
+.hs-edge.right { right: 0; background: linear-gradient(270deg, var(--bg), transparent); }
+
+[data-hscroll-wrap][data-at-start='false'] .hs-edge.left { opacity: 1; }
+[data-hscroll-wrap][data-at-end='false'] .hs-edge.right { opacity: 1; }
+
+/* 너무 낮은 화면(누운 폰·작은 노트북)에서는 원래대로 아래로 흐른다.
+   칸 높이가 300px도 안 되면 한 칸에 두 문단밖에 안 들어간다. */
+@media (max-height: 560px) {
+	.reader {
+		height: auto;
+		columns: auto;
+		column-rule: none;
+		overflow-x: visible;
+		overflow-y: visible;
+		max-width: 760px;
+	}
 }
 
 /* ===== 등장 애니메이션 ===== */

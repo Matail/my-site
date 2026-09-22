@@ -1,145 +1,98 @@
 ---
+/* 블로그 첫 화면 — 홈과 같은 규칙이다. 세로로 쌓지 않고 한 화면에 담는다.
+   글은 옆으로 늘어선 선반 위에 서고, 넘치면 좌우로만 움직인다.
+   줄(분류)은 위쪽 알약이 맡는다 — 누르면 그 줄만 모인 선반으로 간다. */
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import BlogNav from '../../components/BlogNav.astro';
+import PostShelf from '../../components/PostShelf.astro';
+import PostCard from '../../components/PostCard.astro';
+import FeaturedPost from '../../components/FeaturedPost.astro';
+import { byNewest, pickFeatured } from '../../lib/blog';
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
-);
+const posts = await getCollection('blog');
+const featured = posts.length > 0 ? pickFeatured(posts) : null;
 
-const fmt = (d: Date) =>
-	d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+/* 큰 카드로 선 글은 뒤에서 한 번 더 보여주지 않는다 */
+const rest = posts.filter((p) => p.id !== featured?.id).sort(byNewest);
 ---
 
 <Layout
 	title="작업 기록 · my-site"
 	description="게임 만들면서 마주친 문제와 그걸 푸는 과정을 기록합니다."
-	active="blog"
-	width="narrow"
+	width="wide"
+	fit={true}
 >
-	<section class="head">
-		<p class="kicker" data-reveal>DEVLOG</p>
-		<h1 data-reveal style="--reveal-delay: 80">
-			만든 것,<br />
-			<span class="accent">배운 것.</span>
-		</h1>
-		<p class="lead" data-reveal style="--reveal-delay: 160">
-			막힌 지점, 돌아간 길, 다음에 다시 쓸 방법. 잊어버리기 전에 적어둡니다.
-		</p>
-	</section>
+	<header class="head">
+		<div class="titles">
+			<h1 data-reveal>
+				만든 것, <span class="accent">배운 것.</span>
+			</h1>
+			<p class="lead" data-reveal style="--reveal-delay: 80">
+				막힌 지점, 돌아간 길, 다음에 다시 쓸 방법.
+			</p>
+		</div>
 
-	<section class="posts" data-reveal style="--reveal-delay: 220">
+		<div data-reveal style="--reveal-delay: 140"><BlogNav active="all" /></div>
+	</header>
+
+	<div class="stage" data-reveal style="--reveal-delay: 200">
 		{
-			posts.map((post) => (
-				<article class="post">
-					<a href={`/blog/${post.id}/`}>
-						<div class="meta">
-							<time datetime={post.data.pubDate.toISOString()}>{fmt(post.data.pubDate)}</time>
-							{post.data.tags && post.data.tags.length > 0 && (
-								<div class="tags">
-									{post.data.tags.slice(0, 3).map((tag) => (
-										<span class="tag">{tag}</span>
-									))}
-								</div>
-							)}
-						</div>
-						<h2>{post.data.title}</h2>
-						<p>{post.data.description}</p>
-						<span class="go">
-							읽기
-							<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-								<line x1="5" y1="12" x2="19" y2="12" />
-								<polyline points="12 5 19 12 12 19" />
-							</svg>
-						</span>
-					</a>
-				</article>
-			))
+			posts.length > 0 ? (
+				<PostShelf label="작업 기록">
+					{featured && <FeaturedPost post={featured} variant="shelf" />}
+					{rest.map((post) => (
+						<PostCard post={post} variant="shelf" level={2} />
+					))}
+				</PostShelf>
+			) : (
+				<p class="empty">아직 쓴 글이 없어요.</p>
+			)
 		}
-
-		{posts.length === 0 && <p class="empty">아직 쓴 글이 없어요.</p>}
-	</section>
+	</div>
 </Layout>
 
 <style>
+	/* 머리는 한 줄로 눕힌다 — 여기서 아낀 세로가 그대로 카드 높이가 된다 */
 	.head {
-		padding: clamp(3rem, 8vw, 5.5rem) 0 clamp(2rem, 5vw, 3rem);
-	}
-
-	.head h1 {
-		margin: 0 0 1.25rem;
-	}
-
-	.posts {
 		display: flex;
-		flex-direction: column;
-		border-top: 1px solid var(--border);
-		padding-bottom: 2rem;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: var(--s-5);
+		flex-wrap: wrap;
+		padding: clamp(1.5rem, 3.5vw, 2.75rem) 0 clamp(1rem, 2.5vw, 1.5rem);
 	}
 
-	.post a {
-		display: block;
-		padding: 1.75rem 0.5rem;
-		border-bottom: 1px solid var(--border);
-		color: var(--text);
-		transition: background 0.3s var(--ease-soft), padding 0.35s var(--ease-out);
+	.titles h1 {
+		margin: 0 0 0.5rem;
+		font-size: clamp(1.75rem, 3.6vw, 2.9rem);
 	}
 
-	.post a:hover {
-		background: rgba(255, 255, 255, 0.022);
-		padding-inline: 1rem;
+	.titles .lead {
+		margin: 0;
+		font-size: var(--fs-sm);
 	}
 
-	.meta {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		margin-bottom: 0.6rem;
+	/* 분류 알약 아래 여백은 선반이 가져간다 */
+	.head :global(.bnav) {
+		padding-bottom: 0;
 	}
 
-	.meta time {
-		font-family: var(--font-mono);
-		font-size: 0.72rem;
-		letter-spacing: 0.04em;
-		color: var(--text-mute);
-	}
-
-	.tags {
-		display: flex;
-		gap: 0.35rem;
-	}
-
-	.post h2 {
-		font-size: clamp(1.2rem, 2.6vw, 1.5rem);
-		margin: 0 0 0.45rem;
-		letter-spacing: -0.03em;
-	}
-
-	.post p {
-		margin: 0 0 0.9rem;
-		color: var(--text-mute);
-		font-size: 0.95rem;
-		line-height: 1.65;
-	}
-
-	.go {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: var(--lamp);
-	}
-
-	.go svg {
-		transition: transform 0.3s var(--ease-out);
-	}
-
-	.post a:hover .go svg {
-		transform: translateX(3px);
+	.stage {
+		min-height: 0;
+		/* 격자 칸의 기본 min-width: auto 를 풀어야 안쪽 가로 스크롤이 칸을 밀어내지 않는다 */
+		min-width: 0;
 	}
 
 	.empty {
 		padding: 3rem 0;
 		color: var(--text-mute);
+	}
+
+	@media (max-width: 720px) {
+		.head {
+			align-items: flex-start;
+			gap: var(--s-4);
+		}
 	}
 </style>
